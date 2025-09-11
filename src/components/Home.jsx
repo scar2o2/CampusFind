@@ -31,9 +31,6 @@ const Home = () => {
             <h2 onClick={() => setPage('foundItemPage')} className="text-gray-500 text-lg font-semibold hover:underline cursor-pointer">Found Item</h2>
             </div>
             <div className="flex gap-3 items-center">
-            <div className='p-3 cursor-pointer hover:bg-gray-300 rounded-full'>
-                <img className="h-6 p-1" src="/bell.svg" />
-            </div>
             <button className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-600/80">
                 <img className="h-7 p-1" src="/plus.svg" />
                 Post Item
@@ -51,11 +48,9 @@ const Home = () => {
                             <img className="h-6 p-1" src="/bell.svg" />
                             <p className='text-md black'>Notifications</p>
                         </div>
-                        <div className='hover:bg-gray-300'>
-                            <button onClick={logOut} className="w-full text-md text-gray-400 py-2 px-6 rounded-md cursor-pointer flex gap-2  items-center justify-center">
-                                <img className="h-6 " src="/logout.svg" />
-                                <p className='text-md text-black'>Log Out</p>
-                            </button>
+                        <div onClick={logOut} className='p-2 cursor-pointer hover:bg-gray-300 flex gap-2'>
+                            <img className="h-6 " src="/logout.svg" />
+                            <p className='text-md black'>Log Out</p>
                         </div>
                     </div>
                 )}
