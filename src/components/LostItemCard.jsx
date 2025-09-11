@@ -1,9 +1,6 @@
-import React from "react";
-
-const ItemCard = ({ item, category, status, description, location, time, url }) => {
+const LostItemCard = ({ item, category, status, description, location, time, url }) => {
   return (
     <div className="flex flex-col bg-white shadow-gray-400 shadow-sm rounded-lg w-full h-full flex-1 hover:shadow-md">
-      <img className="w-full h-44 object-cover rounded-t-lg" src={url} alt={item} />
       <div className="flex flex-col p-3 gap-2 flex-1">
         <div className="flex justify-between">
           <div className="flex flex-col gap-1">
@@ -36,4 +33,4 @@ const ItemCard = ({ item, category, status, description, location, time, url }) 
   );
 };
 
-export default ItemCard;
+export default LostItemCard;

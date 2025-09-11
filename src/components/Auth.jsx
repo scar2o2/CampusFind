@@ -54,16 +54,6 @@ const Auth = () => {
     setPass("");
   };
 
-  const logOut = async () => {
-    try {
-      await signOut(auth);
-      setMsg("Logged out successfully!");
-      setErrMsg("");
-    } catch (e) {
-      setErrMsg(e.message);
-    }
-  };
-
   return (
     <div className="flex justify-center items-center flex-1 h-screen">
       <div className="shadow-sm shadow-gray-400 flex justify-center items-center flex-col gap-2 p-6">
@@ -125,10 +115,7 @@ const Auth = () => {
         )}
         <button onClick={SignInWithGoogle} className="w-full py-2 px-6 rounded-md cursor-pointer flex gap-2 border-2 items-center justify-center hover:shadow-md hover:shadow-gray-300">
           <img className="h-7 p-1" src="/google.svg" alt="" />
-          Log In with Google
-        </button>
-        <button onClick={logOut} className="w-full py-2 px-6 rounded-md cursor-pointer flex gap-2 border-2 items-center justify-center hover:shadow-md hover:shadow-gray-300">
-          Log Out
+          {sState==='signIn'?"Log In with Google":"Sign Up with Google"}
         </button>
       </div>
     </div>
