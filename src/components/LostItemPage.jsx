@@ -2,7 +2,7 @@ import React from 'react'
 
 const LostItemPage = () => {
   return (
-    <div>LostItemPage</div>
+    <div className='mt-17'>LostItemPage</div>
   )
 }
 

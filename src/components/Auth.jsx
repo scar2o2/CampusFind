@@ -5,10 +5,13 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signOut
 } from 'firebase/auth';
+import { useAuth } from '../utils/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
+  const {setUser}= useAuth();
+  const navigate= useNavigate();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [sState, setSState] = useState("signIn");
@@ -20,6 +23,8 @@ const Auth = () => {
       await signInWithPopup(auth, googleProvider);
       setMsg("Signed in with Google successfully!");
       setErrMsg("");
+      setUser(auth?.currentUser?.email);
+      useNavigate('/');
     } catch (e) {
       setErrMsg(e.message);
     }
@@ -46,7 +51,10 @@ const Auth = () => {
         return;
       }
       setMsg("Signed in successfully!");
+      setUser(auth?.currentUser?.email);
+
       setErrMsg("");
+      navigate('/');
     } catch (e) {
       setErrMsg(e.message);
     }

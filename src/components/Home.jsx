@@ -1,13 +1,16 @@
 import React, { useRef, useState } from 'react'
 import LostItemPage from './LostItemPage';
 import FoundItemPage from './FoundItemPage';
-import ItemCard from './FoundItemCard';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import FoundItemCard from './FoundItemCard';
 import LostItemCard from './LostItemCard.jsx';
+import { useAuth } from '../utils/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+    const {user,setUser}= useAuth();
+    const navigate= useNavigate();
     const [page, setPage] = useState('home');
     const url1= "https://i.guim.co.uk/img/media/7e7b161c1296ff31e1a580de4ae7bc012082a861/157_120_5033_3020/master/5033.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=6ef5b0d69b95a00fc91931ae7b22990a";
     const url2= "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4uGoI8gD7GPUoT8QZbl-vBMQS8Lbgt8GvDA&s";
@@ -19,16 +22,31 @@ const Home = () => {
 
     const logOut = async () => {
         await signOut(auth);
+        setUser("");
     };
+
+      if (!user) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50">
+                <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
+                <p className="text-gray-600">Please log in to access your dashboard.</p>
+                <div className="flex items-center gap-3 mt-2">
+                    <button className="px-5 py-2 bg-black text-white rounded-lg hover:bg-black/80 cursor-pointer flex-1" onClick={()=>{navigate('/auth')}}>Login</button>
+                </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col w-full overflow-x-hidden mb-4">
         <header className="flex justify-between w-full p-3 bg-transparent backdrop-blur-2xl fixed top-0 ">
             <h1 className="text-3xl font-bold text-blue-600">CampusFind</h1>
             <div className="gap-4 items-center hidden sm:flex">
-            <h2 onClick={() => setPage('home')} className="text-gray-500 text-lg font-semibold hover:underline cursor-pointer">Home</h2>
-            <h2 onClick={() => setPage('lostItemPage')} className="text-gray-500 text-lg font-semibold hover:underline cursor-pointer">Lost Item</h2>
-            <h2 onClick={() => setPage('foundItemPage')} className="text-gray-500 text-lg font-semibold hover:underline cursor-pointer">Found Item</h2>
+            <h2 onClick={() => setPage('home')} className={page==='home'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Home</h2>
+            <h2 onClick={() => setPage('lostItemPage')} className={page==='lostItemPage'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Lost Items</h2>
+            <h2 onClick={() => setPage('foundItemPage')} className={page==='foundItemPage'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Found Items</h2>
             </div>
             <div className="flex gap-3 items-center">
             <button className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-600/80">
