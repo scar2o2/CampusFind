@@ -65,7 +65,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex justify-center items-center flex-1">
+    <div className="flex justify-center items-center flex-1 h-screen">
       <div className="shadow-sm shadow-gray-400 flex justify-center items-center flex-col gap-2 p-6">
         <h1 className="font-bold text-2xl">Welcome</h1>
         <p className="text-gray-600">Sign in to your account or create a new one</p>
