@@ -2,14 +2,14 @@ import { initializeApp } from 'firebase/app';
 import {getAuth,GoogleAuthProvider} from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDuZU3T1HW5MEXXIxf3dOCb2ncUmn-rYaA",
-  authDomain: "lostandfound-3cd67.firebaseapp.com",
-  databaseURL: "https://lostandfound-3cd67-default-rtdb.firebaseio.com",
-  projectId: "lostandfound-3cd67",
-  storageBucket: "lostandfound-3cd67.firebasestorage.app",
-  messagingSenderId: "477363458500",
-  appId: "1:477363458500:web:2803f4979143cf968ed491",
-  measurementId: "G-TG74FCG3MD"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app= initializeApp(firebaseConfig);

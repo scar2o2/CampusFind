@@ -29,7 +29,6 @@ const PostLostItem = () => {
     });
   };
 
-
   return (
     <div className="w-full px-6 py-8 bg-white rounded-lg text-left">
       <div className="space-y-6 w-full">
@@ -99,37 +98,22 @@ const PostLostItem = () => {
           />
         </div>
 
-        {/* Location */}
+        {/* Location - changed to text input */}
         <div className="flex flex-col gap-2 w-full">
           <label className="flex items-center gap-2 font-medium text-gray-800">
             <MapPin size={16} className="text-gray-600" />
             Location <span className="text-red-500">*</span>
           </label>
-          <div className="relative w-full">
-            <select
-              className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 
-                         focus:border-transparent text-gray-700 appearance-none"
-              value={item.location}
-              onChange={(e) => setItem({ ...item, location: e.target.value })}
-              required
-            >
-              <option value="">Where was it lost?</option>
-              <option value="campus-library">Campus Library</option>
-              <option value="student-center">Student Center</option>
-              <option value="cafeteria">Cafeteria</option>
-              <option value="gym">Gym</option>
-              <option value="parking-lot">Parking Lot</option>
-              <option value="classroom">Classroom</option>
-              <option value="dormitory">Dormitory</option>
-              <option value="other">Other</option>
-            </select>
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <input
+            type="text"
+            placeholder="Where was it lost?"
+            className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 
+                       focus:border-transparent text-gray-700"
+            value={item.location}
+            onChange={(e) => setItem({ ...item, location: e.target.value })}
+            required
+          />
         </div>
 
         {/* Date Lost */}
@@ -140,7 +124,6 @@ const PostLostItem = () => {
           </label>
           <input
             type="date"
-            placeholder="DD-MM-YYYY"
             className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
                        focus:outline-none focus:ring-2 focus:ring-blue-500 
                        focus:border-transparent text-gray-700"
@@ -185,14 +168,14 @@ const PostLostItem = () => {
           </p>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit & Reset Buttons */}
         <div className='w-full flex gap-4'>
           <button
-            onClick={()=>{console.log(item)}}
+            onClick={() => { console.log(item) }}
             className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium py-4 
                       rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-sm"
           >
-            Post Found Item
+            Post Lost Item
           </button>
           <button 
             className='flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium py-4 
