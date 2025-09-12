@@ -24,7 +24,7 @@ const Auth = () => {
       setMsg("Signed in with Google successfully!");
       setErrMsg("");
       setUser(auth?.currentUser?.email);
-      useNavigate('/');
+      navigate('/');
     } catch (e) {
       setErrMsg(e.message);
     }
