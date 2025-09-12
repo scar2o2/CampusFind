@@ -52,7 +52,6 @@ const Auth = () => {
       }
       setMsg("Signed in successfully!");
       setUser(auth?.currentUser?.email);
-
       setErrMsg("");
       navigate('/');
     } catch (e) {
