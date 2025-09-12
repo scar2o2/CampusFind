@@ -4,6 +4,7 @@ import { useAuth } from '../utils/AuthContext';
 import PostLostItem from './PostLostItem';
 import PostFoundItem from './PostFoundItem';
 import { signOut } from 'firebase/auth';
+import {auth} from '../config/firebase';
 
 const PostItem = () => {
     const { user, setUser } = useAuth();
@@ -16,6 +17,20 @@ const PostItem = () => {
         await signOut(auth);
         setUser("");
     };
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
+                    <p className="text-gray-600">Please log in to access your dashboard.</p>
+                    <div className="flex items-center gap-3 mt-2">
+                        <button className="px-5 py-2 bg-black text-white rounded-lg hover:bg-black/80 cursor-pointer flex-1" onClick={()=>{navigate('/auth')}}>Login</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col w-full min-h-screen">
@@ -71,27 +86,36 @@ const PostItem = () => {
                     </div>
                 </div>
             </header>
-            <div className='flex-1 flex flex-col bg-gray-100 justify-center text-center p-8 pt-20'>
+            <div className='flex-1 flex flex-col bg-gray-100 justify-center text-center p-12 pt-20'>
                 <div>
-                    <h1 className='text-3xl font-bold'>Post Lost Item</h1>
-                    <p className='text-xl text-gray-500 font-medium'>Help connect items with their owners</p>
+                    {status==='lostItem'?(
+                        <>
+                            <h1 className='text-3xl font-bold'>Post Lost Item</h1>
+                            <p className='text-xl text-gray-500 font-medium'>Find your item through the community</p>
+                        </>
+                    ):(
+                        <>
+                            <h1 className='text-3xl font-bold'>Post Found Item</h1>
+                            <p className='text-xl text-gray-500 font-medium'>Help return items to their owners</p>
+                        </>
+                    )}
                 </div>
-                <div className='bg-white flex flex-col p-6 mt-6 items-center'>
+                <div className='bg-white flex flex-col p-3 mt-6 items-center rounded-lg shadow-md shadow-gray-400'>
                     <div className="bg-gray-200 flex flex-row gap-2 rounded-md text-gray-500 text-sm py-1 px-1">
                         <div
                             onClick={() => { setStatus("lostItem"); }}
-                            className={`py-1.5 px-20 font-medium cursor-pointer ${status === "lostItem" ? "bg-white text-black rounded-md" : ""}`}
+                            className={`py-1.5 px-20 font-medium cursor-pointer ${status === "lostItem" ? "bg-blue-900 text-white rounded-md" : ""}`}
                         >
                             Lost Item
                         </div>
                         <div
                             onClick={() => { setStatus("foundItem"); }}
-                            className={`py-1.5 px-20 font-medium cursor-pointer ${status === "foundItem" ? "bg-white text-black rounded-md" : ""}`}
+                            className={`py-1.5 px-20 font-medium cursor-pointer ${status === "foundItem" ? "bg-blue-900 text-white rounded-md" : ""}`}
                         >
                             Found Item
                         </div>
                     </div>
-                    <div>
+                    <div className='w-full'>
                         {status==='lostItem'?(<PostLostItem/>):(<PostFoundItem/>)}
                     </div>
                 </div>
