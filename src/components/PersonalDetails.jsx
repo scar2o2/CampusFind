@@ -92,7 +92,6 @@ const PersonalDetails = () => {
             >
               Save Profile
             </button>
-            <button onClick={() => console.log(user)}>Data</button>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import LostItemPage from './LostItemPage';
 import FoundItemPage from './FoundItemPage';
 import { signOut } from 'firebase/auth';
@@ -27,19 +27,23 @@ const Home = () => {
         setUser("");
     };
 
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
-                    <p className="text-gray-600">Please log in to access your dashboard.</p>
-                    <div className="flex items-center gap-3 mt-2">
-                        <button className="px-5 py-2 bg-black text-white rounded-lg hover:bg-black/80 cursor-pointer flex-1" onClick={()=>{navigate('/auth')}}>Login</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // if (!user) {
+    //     navigate('/auth');
+    //     // return (
+    //     //     <div className="flex items-center justify-center h-screen bg-gray-50">
+    //     //         <div className="text-center">
+    //     //             <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
+    //     //             <p className="text-gray-600">Please log in to access your dashboard.</p>
+    //     //             <div className="flex items-center gap-3 mt-2">
+    //     //                 <button className="px-5 py-2 bg-black text-white rounded-lg hover:bg-black/80 cursor-pointer flex-1" onClick={()=>{navigate('/auth')}}>Login</button>
+    //     //             </div>
+    //     //         </div>
+    //     //     </div>
+    //     // );
+    // }
+    useEffect(()=>{
+        if(!user) navigate('/auth');
+    },[])
 
     return (
         <div className="flex flex-col w-full min-h-screen mb-4">
@@ -52,7 +56,7 @@ const Home = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                     <div onClick={()=>{setPage('profilePage')}} className='py-3 px-4 cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-full'>
-                        {user?.name.slice(0,1).toUpperCase()}                        
+                        {user?.name?.slice(0,1).toUpperCase()}                        
                     </div>
                     <button onClick={()=>{navigate('/postitem')}} className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-600/80">
                         <img className="h-7 p-1" src="/plus.svg" />
