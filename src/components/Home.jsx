@@ -7,6 +7,8 @@ import FoundItemCard from './FoundItemCard';
 import LostItemCard from './LostItemCard.jsx';
 import { useAuth } from '../utils/AuthContext.jsx';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Notifications from './Notifications.jsx';
+import Profile from './Profile.jsx';
 
 const Home = () => {
     const {user,setUser}= useAuth();
@@ -41,14 +43,17 @@ const Home = () => {
 
     return (
         <div className="flex flex-col w-full min-h-screen mb-4">
-            <header className="flex justify-between w-full p-3 bg-transparent backdrop-blur-2xl fixed top-0 z-10">
-                <h1 className="text-3xl font-bold text-blue-600">CampusFind</h1>
+            <header className="flex justify-between w-full p-3 bg-transparent backdrop-blur-2xl fixed top-0 z-10 gap-3">
+                <h1 className="text-3xl font-bold text-blue-600 cursor-pointer" onClick={()=>setPage('home')}>CampusFind</h1>
                 <div className="gap-4 items-center hidden sm:flex">
-                    <h2 onClick={() => setPage('home')} className={page==='home'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Home</h2>
+                    <h2 onClick={() => setPage('home')} className={page==='home'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer"):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Home</h2>
                     <h2 onClick={() => setPage('lostItemPage')} className={page==='lostItemPage'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Lost Items</h2>
                     <h2 onClick={() => setPage('foundItemPage')} className={page==='foundItemPage'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Found Items</h2>
                 </div>
                 <div className="flex gap-3 items-center">
+                    <div onClick={()=>{setPage('profilePage')}} className='py-3 px-4 cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-full'>
+                        {user?.name.slice(0,1).toUpperCase()}                        
+                    </div>
                     <button onClick={()=>{navigate('/postitem')}} className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-600/80">
                         <img className="h-7 p-1" src="/plus.svg" />
                         Post Item
@@ -62,7 +67,10 @@ const Home = () => {
                         </div>
                         {menuOpen && (
                             <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md overflow-hidden z-50">
-                                <div className='p-2 cursor-pointer hover:bg-gray-300 flex gap-2'>
+                                <div 
+                                    className='p-2 cursor-pointer hover:bg-gray-300 flex gap-2'
+                                    onClick={()=>{setPage('notificationPage');setMenuOpen((prev)=> !prev)}}
+                                >
                                     <img className="h-6 p-1" src="/bell.svg" />
                                     <p className='text-md black'>Notifications</p>
                                 </div>
@@ -84,18 +92,8 @@ const Home = () => {
                                 <h2 className="text-white text-3xl font-bold">Lost Something?</h2>
                                 <h2 className="text-white text-3xl font-bold">We'll Help You Find It</h2>
                             </div>
-                            <p className="text-white text-lg font-medium">
-                                Connect with your campus community to reunite lost items with their owners
-                            </p>
-                            <div className="flex gap-7">
-                                <button className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-700">
-                                    <img className="h-7 p-1" src="/plus.svg" />
-                                    Post Lost Item
-                                </button>
-                                <button className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-700">
-                                    <img className="h-7 p-1" src="/plus.svg" />
-                                    Post Found Item
-                                </button>
+                            <div className="text-white text-lg font-medium">
+                                <p>Connect with your campus community to reunite lost items with their owners</p>
                             </div>
                         </div>
 
@@ -169,12 +167,28 @@ const Home = () => {
                                     </div>)
                                 }
                             </div>
+                            <div className="flex gap-7">
+                                <button 
+                                    className="text-white bg-blue-900 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-700 sm:hidden"
+                                    onClick={()=>setPage('lostItemPage')}
+                                >
+                                    All Lost Items
+                                </button>
+                                <button 
+                                    className="text-white bg-blue-900 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-700 sm:hidden"
+                                    onClick={()=>setPage('foundItemPage')}
+                                >
+                                    All Found Items
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ) : null}
 
                 {page === 'lostItemPage' ? <LostItemPage /> : null}
                 {page === 'foundItemPage' ? <FoundItemPage /> : null}
+                {page === 'notificationPage' ? <Notifications/>: null}
+                {page === 'profilePage' ? <Profile/>: null}
             </main>
         </div>
     );

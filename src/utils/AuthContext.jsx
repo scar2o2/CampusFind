@@ -4,11 +4,18 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    return localStorage.getItem("User") || null;
+    const storedUser = localStorage.getItem("User");
+    try {
+      return storedUser ? JSON.parse(storedUser) : { name: "", email: "", phone: "" };
+    } catch (error) {
+      console.error("Failed to parse user from localStorage:", error);
+      return { name: "", email: "", phone: "" };
+    }
   });
+
   useEffect(() => {
     if (user) {
-      localStorage.setItem("User", user);
+      localStorage.setItem("User", JSON.stringify(user));
     } else {
       localStorage.removeItem("User");
     }

@@ -10,7 +10,7 @@ import { useAuth } from '../utils/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
-  const {setUser}= useAuth();
+  const {user,setUser}= useAuth();
   const navigate= useNavigate();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -23,8 +23,8 @@ const Auth = () => {
       await signInWithPopup(auth, googleProvider);
       setMsg("Signed in with Google successfully!");
       setErrMsg("");
-      setUser(auth?.currentUser?.email);
-      navigate('/');
+      setUser({...user,email:auth?.currentUser?.email});
+      navigate('/details');
     } catch (e) {
       setErrMsg(e.message);
     }
@@ -51,9 +51,9 @@ const Auth = () => {
         return;
       }
       setMsg("Signed in successfully!");
-      setUser(auth?.currentUser?.email);
+      setUser({...user,email:auth?.currentUser?.email});
       setErrMsg("");
-      navigate('/');
+      navigate('/details');
     } catch (e) {
       setErrMsg(e.message);
     }
