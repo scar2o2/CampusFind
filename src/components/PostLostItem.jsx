@@ -149,24 +149,7 @@ const PostLostItem = () => {
               onChange={(e) => setItem({ ...item, image: e.target.files[0] })}
             />
           </div>
-        </div>
-
-        {/* Contact Information */}
-        <div className="flex flex-col gap-2 w-full">
-          <label className="font-medium text-gray-800">Contact Information</label>
-          <input
-            type="text"
-            placeholder="Email or phone number (optional)"
-            className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 
-                       focus:border-transparent text-gray-700"
-            value={item.contact}
-            onChange={(e) => setItem({ ...item, contact: e.target.value })}
-          />
-          <p className="text-gray-500 text-sm">
-            We'll use our messaging system to connect you with potential matches.
-          </p>
-        </div>
+        </div>        
 
         {/* Submit & Reset Buttons */}
         <div className='w-full flex gap-4'>
