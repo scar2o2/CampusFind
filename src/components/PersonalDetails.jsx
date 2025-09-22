@@ -1,15 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { addUser,getUser,checkUser } from "../../supabaseCRUD";
 const PersonalDetails = () => {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  useEffect(()=>{
+    if(!user) navigate('/login');
+    const checkUserExists= async()=>{
+      const exist =await checkUser("email",user.email);
+      if(exist){
+        await getUser('email',user.email).then((res)=>{
+          setUser({ ...user, name: res[0].name, phone: res[0].phn_no });
+          navigate('/');
+        })
 
+      }
+    }
+    checkUserExists();
+  },[])
+  const [errMsg, setErrMsg] = useState('');
+  const [msg, setMsg] = useState('');
   const [profileData, setProfileData] = useState({
     fullName: user?.name || '',
     phoneNumber: user?.phone || ''
   });
+
+  const AddUserDB = async () => {
+    setMsg('Profile updated successfully!');
+    setTimeout(() => setMsg(''), 3000);
+    await addUser(user);
+  }
 
   const handleInputChange = (field, value) => {
     if (field === 'phoneNumber') {
@@ -24,15 +45,17 @@ const PersonalDetails = () => {
 
   const handleSubmit = () => {
     if (!profileData.fullName.trim()) {
-      alert('Please enter your full name.');
+      setErrMsg('Please enter your full name.');
       return;
     }
     if (!profileData.phoneNumber.trim() || !validatePhoneNumber(profileData.phoneNumber)) {
-      alert('Please enter a valid 10-digit phone number.');
+      setErrMsg('Please enter a valid 10-digit phone number.');
       return;
     }
 
     setUser({ ...user, name: profileData.fullName, phone: profileData.phoneNumber });
+    setErrMsg('');
+    AddUserDB();
   };
 
   return (
@@ -92,6 +115,7 @@ const PersonalDetails = () => {
             >
               Save Profile
             </button>
+            <span className={errMsg===''?'text-xl text-green-500':"text-xl text-red-500"}>{errMsg && errMsg}{msg && msg}</span>
           </div>
         </div>
       </div>
