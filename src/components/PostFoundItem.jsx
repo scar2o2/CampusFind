@@ -1,21 +1,37 @@
 import React, { useState } from 'react';
 import { Tag, MapPin, Calendar, Upload } from 'lucide-react';
+import {useAuth} from '../../src/utils/AuthContext'
+import { createFoundItem } from '../../supabaseRoutes/supabaseFoundItems';
+import {getUploadImageUrl} from '../../supabaseRoutes/supabaseUploadImageGetURl'
 
 const PostFoundItem = () => {
+  const {user}= useAuth();
   const [item, setItem] = useState({
     name: "",
     category: "",
     description: "",
     location: "",
-    date: "",
+    foundDate: "",
     image: null,
-    contact: ""
+    image_url: "",
+    userId: user.id
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', item);
-  };
+  const postFoundItem= async()=>{
+    if (!item.image) return alert("Please select an image first");
+    const url = await getUploadImageUrl(item.image);
+    if (url) setItem({...item,image_url:url});
+    const newItem = {
+      name: item.name,
+      category: item.category,
+      description: item.description,
+      location: item.location,
+      foundDate: item.foundDate,
+      image_url: item.image_url,
+      userId: user.id
+    };
+    await createFoundItem(newItem);
+  }
 
   const reset = () => {
     setItem({
@@ -23,9 +39,9 @@ const PostFoundItem = () => {
       category: "",
       description: "",
       location: "",
-      date: "",
+      foundDate: "",
       image: null,
-      contact: ""
+      image_url: ""
     });
   };
 
@@ -127,8 +143,8 @@ const PostFoundItem = () => {
             className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
                        focus:outline-none focus:ring-2 focus:ring-blue-500 
                        focus:border-transparent text-gray-700"
-            value={item.date}
-            onChange={(e) => setItem({ ...item, date: e.target.value })}
+            value={item.foundDate}
+            onChange={(e) => setItem({ ...item, foundDate: e.target.value })}
           />
         </div>
 
@@ -154,7 +170,7 @@ const PostFoundItem = () => {
         {/* Submit & Reset Buttons */}
         <div className='w-full flex gap-4'>
           <button
-            onClick={() => { console.log(item) }}
+            onClick={postFoundItem}
             className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium py-4 
                       rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-sm"
           >

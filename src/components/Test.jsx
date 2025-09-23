@@ -10,6 +10,7 @@ const Test = () => {
     if (!imageFile) return alert("Please select an image first");
 
     const url = await getUploadImageUrl(imageFile);
+    console.log(url);
     if (url) setImageUrl(url);
   };
 

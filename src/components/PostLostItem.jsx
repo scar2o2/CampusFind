@@ -15,6 +15,10 @@ const PostLostItem = () => {
   });
 
   const postLostItem = () => {
+    if(item.name===''||item.category===''||item.description===''||item.location===''||item.lostDate==='') {
+      console.log('All fields are required');
+      return;
+    }
     createLostPost(item);
   };
 
