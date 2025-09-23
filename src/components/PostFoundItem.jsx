@@ -1,3 +1,6 @@
+//for testing if the image_url is there or "" remove the comments before ur1 and url2
+
+
 import React, { useState } from 'react';
 import { Tag, MapPin, Calendar, Upload } from 'lucide-react';
 import {useAuth} from '../../src/utils/AuthContext'
@@ -13,23 +16,23 @@ const PostFoundItem = () => {
     location: "",
     foundDate: "",
     image: null,
-    image_url: "",
     userId: user.id
   });
 
   const postFoundItem= async()=>{
     if (!item.image) return alert("Please select an image first");
     const url = await getUploadImageUrl(item.image);
-    if (url) setItem({...item,image_url:url});
+    // console.log('url1:',url)
     const newItem = {
       name: item.name,
       category: item.category,
       description: item.description,
       location: item.location,
       foundDate: item.foundDate,
-      image_url: item.image_url,
+      image_url: url,
       userId: user.id
     };
+    // console.log('url2:',newItem.image_url)
     await createFoundItem(newItem);
   }
 

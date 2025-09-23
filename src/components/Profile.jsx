@@ -2,21 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { Eye, MapPin, Calendar, Edit3, TrendingUp, Target, CheckCircle, Phone, Save, RefreshCw , X} from 'lucide-react';
 import { useAuth } from '../utils/AuthContext';
 import { updateUser,getUser } from '../../supabaseRoutes/supabaseUsers';
+import {getLostItemByUserId} from '../../supabaseRoutes/supabaseLostItems'
+import {getFoundItemsByUser} from '../../supabaseRoutes/supabaseFoundItems'
 
 const Profile = () => {
   const {user,setUser}= useAuth();
   const [activeTab, setActiveTab] = useState('Lost Items');
   const [edit,setEdit]= useState(false);
   const [inputData,setInputData]= useState({name:'',phn_no:''});
+  const [lostItems,setLostItems]= useState([]);
+  const [foundItems,setFoundItems]= useState([]);
+  const [imageErrors, setImageErrors] = useState(new Set());
 
-  // useEffect(()=>{
-  //   const xyzfunc= async ()=>{
-  //     await updateUser(user.id,{name:'Manoj',phn_no:'9032753439'}).then((res)=>{
-  //       console.log(res);
-  //     })
-  //   }
-  //   xyzfunc();
-  // })
+  useEffect(()=>{
+    const fetchData = async () => {
+      const lost = await getLostItemByUserId(user.id);
+      const found = await getFoundItemsByUser(user.id);
+
+      // normalize found items -> status: "Found"
+      const normalizedFound = found.map(f => ({...f, status: "Found"}));
+
+      setLostItems(lost);
+      console.log('Found',found);
+      setFoundItems(normalizedFound);
+    };
+    if (user?.id) fetchData();
+  },[user?.id]);
 
   const resetInput= ()=>{
     setInputData({name:"",phn_no:""});
@@ -39,6 +50,9 @@ const Profile = () => {
     });
   }
 
+  const handleImageError = (itemId) => {
+    setImageErrors(prev => new Set([...prev, itemId]));
+  };
 
   const userProfile = {
     name: user?.name || "Guest",
@@ -49,38 +63,10 @@ const Profile = () => {
   };
 
   const stats = {
-    totalPosts: 2,
-    itemsFound: 8,
-    successfulMatches: 5,
+    totalPosts: lostItems.length + foundItems.length,
+    itemsFound: foundItems.length,
+    successfulMatches: [...lostItems, ...foundItems].filter(item => item.isMatched).length,
   };
-
-  const lostItems = [
-    {
-      id: 1,
-      title: 'Lost iPhone 15 Pro',
-      category: 'Electronics',
-      description: 'Space Black iPhone 15 Pro with a clear case. Has a small crack on the bottom...',
-      location: 'Student Center',
-      date: '2024-01-15',
-      status: 'Lost',
-      image: null,
-      isMatched: false
-    }
-  ];
-
-  const foundItems = [
-    {
-      id: 2,
-      title: 'Brown Leather Wallet',
-      category: 'Personal Items',
-      description: 'Brown leather bifold wallet with university ID inside',
-      location: 'Library 3rd Floor',
-      date: '2024-01-10',
-      status: 'Matched',
-      image: null,
-      isMatched: true
-    }
-  ];
 
   const currentItems = activeTab === 'Lost Items' ? lostItems : foundItems;
   const lostCount = lostItems.length;
@@ -213,59 +199,111 @@ const Profile = () => {
         {/* Items Grid */}
         <div className="p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {currentItems.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                {/* Image Placeholder */}
-                <div className="h-32 sm:h-48 bg-blue-100 flex items-center justify-center relative">
-                  <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
-                  
-                  {/* Status Badge */}
-                  {item.isMatched && (
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-                      <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium bg-blue-600 text-white rounded-full">
-                        Matched!
-                      </span>
+            {currentItems.map((item) => {
+              // Determine if this is a lost or found item based on the active tab
+              const isLostItem = activeTab === 'Lost Items';
+              
+              // Get the appropriate field values based on item type
+              const itemTitle = item.name || item.title || 'Untitled Item';
+              const itemDate = isLostItem ? item.lostDate : item.foundDate;
+              const itemStatus = item.status || (isLostItem ? 'Lost' : 'Found');
+              const hasValidImage = !isLostItem && item.image_url && !imageErrors.has(item.id);
+              
+              return (
+                <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
+                  {/* Image Section - Only for Found Items */}
+                  {!isLostItem && (
+                    <div className="h-36 sm:h-52 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center relative">
+                      {hasValidImage ? (
+                        <img 
+                          src={item.image_url} 
+                          alt={itemTitle}
+                          className="w-full h-full object-cover"
+                          onError={() => handleImageError(item.id)}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center">
+                          <Eye className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mb-2" />
+                          <span className="text-xs text-gray-500 font-medium">No image available</span>
+                        </div>
+                      )}
+                      
+                      {/* Status Badge */}
+                      {item.isMatched && (
+                        <div className="absolute top-3 right-3">
+                          <span className="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded-full shadow-lg border-2 border-white">
+                            ✓ Matched!
+                          </span>
+                          <button className='text-black ml-2 bg-white px-2 py-1 rounded text-xs' onClick={() => clickImageUrl(item.image_url)}>View</button>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
 
-                {/* Content */}
-                <div className="p-3 sm:p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 mr-2">{item.title}</h3>
-                    <span className={`px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium rounded-full flex-shrink-0 ${
-                      item.status === 'Lost' 
-                        ? 'bg-blue-600 text-white'
-                        : item.status === 'Matched'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-600 text-white'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
-
-                  <div className="text-xs sm:text-sm text-blue-600 font-medium mb-2 sm:mb-3">
-                    {item.category}
-                  </div>
-
-                  <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">
-                    {item.description}
-                  </p>
-
-                  {/* Location and Date */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 space-y-1 sm:space-y-0">
-                    <div className="flex items-center">
-                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      <span className="truncate">{item.location}</span>
+                  {/* Content */}
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 mr-2 leading-tight">
+                        {itemTitle}
+                      </h3>
+                      <div className="flex flex-col items-end space-y-2">
+                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold rounded-full flex-shrink-0 shadow-sm ${
+                          itemStatus === 'Lost' 
+                            ? 'bg-red-100 text-red-800 border border-red-200'
+                            : itemStatus === 'Found'
+                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}>
+                          {itemStatus}
+                        </span>
+                        {/* Status Badge for items without image or for lost items */}
+                        {(isLostItem || !hasValidImage) && item.isMatched && (
+                          <span className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold bg-green-600 text-white rounded-full shadow-sm border border-green-700">
+                            ✓ Matched!
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      {item.date}
+
+                    <div className="flex items-center mb-3">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        {item.category || 'Uncategorized'}
+                      </span>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-3">
+                        {item.description || 'No description provided'}
+                      </p>
+                    </div>
+
+                    {/* Additional Details Section */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                          <span className="font-medium mr-1">Location:</span>
+                          <span className="truncate">{item.location || 'Not specified'}</span>
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                          <span className="font-medium mr-1">{isLostItem ? 'Lost on:' : 'Found on:'}</span>
+                          <span>{itemDate ? formatDate(itemDate) : 'Not specified'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center text-xs text-gray-500">
+                        <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                        <span>Posted {itemDate ? formatDate(itemDate) : 'recently'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Empty State */}
