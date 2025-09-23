@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Notifications from './Notifications.jsx';
 import Profile from './Profile.jsx';
 import { addUser, getUsers, updateUser, deleteUser } from "../../supabaseRoutes/supabaseUsers.js";      
+import { createLostPost } from '../../supabaseRoutes/supabaseLostItems.js';
 
 const Home = () => {
     const {user,setUser}= useAuth();
@@ -31,7 +32,7 @@ const Home = () => {
 
 
     // useEffect(()=>{
-    //     console.log(user);
+    //     createLostPost();
     // });
 
 

@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tag, MapPin, Calendar, Upload } from 'lucide-react';
+import { createLostPost } from '../../supabaseRoutes/supabaseLostItems';
+import { useAuth } from '../utils/AuthContext';
 
 const PostLostItem = () => {
+  const {user}= useAuth();
   const [item, setItem] = useState({
     name: "",
     category: "",
     description: "",
     location: "",
-    date: "",
-    image: null,
-    contact: ""
+    lostDate: "",
+    userId: user?.id
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', item);
+  const postLostItem = () => {
+    createLostPost(item);
   };
 
   const reset = () => {
@@ -23,9 +24,8 @@ const PostLostItem = () => {
       category: "",
       description: "",
       location: "",
-      date: "",
-      image: null,
-      contact: ""
+      lostDate: "",
+      userId: user?.id,
     });
   };
 
@@ -127,34 +127,15 @@ const PostLostItem = () => {
             className="w-full border border-gray-300 bg-gray-50 rounded-md px-3 py-3 
                        focus:outline-none focus:ring-2 focus:ring-blue-500 
                        focus:border-transparent text-gray-700"
-            value={item.date}
-            onChange={(e) => setItem({ ...item, date: e.target.value })}
+            value={item.lostDate}
+            onChange={(e) => setItem({ ...item, lostDate:e.target.value })}
           />
-        </div>
-
-        {/* Photo Upload */}
-        <div className="flex flex-col gap-2 w-full">
-          <label className="flex items-center gap-2 font-medium text-gray-800">
-            <Upload size={16} className="text-gray-600" />
-            Photo (Optional)
-          </label>
-          <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer w-full">
-            <Upload size={24} className="text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600 font-medium">Click to upload a photo</p>
-            <p className="text-gray-500 text-sm mt-1">Helps others identify the item</p>
-            <input
-              type="file"
-              accept="image/*"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={(e) => setItem({ ...item, image: e.target.files[0] })}
-            />
-          </div>
-        </div>        
+        </div>     
 
         {/* Submit & Reset Buttons */}
         <div className='w-full flex gap-4'>
           <button
-            onClick={() => { console.log(item) }}
+            onClick={postLostItem}
             className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium py-4 
                       rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-sm"
           >
