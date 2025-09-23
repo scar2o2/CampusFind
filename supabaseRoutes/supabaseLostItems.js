@@ -19,20 +19,57 @@ export const createLostPost =async(lostItem)=>{
 }
 
 export const fetchLostItems = async () => {
+  try{
     const { data, error } = await supabase
       .from("lost_items")
-      .select("*");
-    if (error) console.error("Error fetching lost items:", error);
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching lost items:", error);
+      return [];    
+    }
     return data;
-  };
+  }catch(err){
+    console.error("Unexpected error:", err);
+    return [];
+  }
+};
+
+  
 
 export const getLostItemByUserId = async (id) => {
+  try{
     const { data, error } = await supabase
       .from("lost_items")
       .select("*")
       .eq("userId", id)
-      .single();
-    if (error) console.error("Error fetching lost item by ID:", error);
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching lost items by user:", error);
+      return [];    
+    }
     return data;
-  };
+  }catch(err){
+    console.error("Unexpected error:", err);
+    return [];
+  }  
+};
+
+export const deleteLostItem = async (itemId) => {   
+  try{
+    const { data, error } = await supabase
+      .from("lost_items")
+      .delete()
+      .eq("id", itemId);
+    if (error) {
+      console.error("Error deleting lost item:", error);
+      return null;    
+    } 
+    console.log("Lost item deleted successfully.");
+    return data;
+  }catch(err){
+    console.error("Unexpected error:", err);
+    return null;
+  }
+};
 

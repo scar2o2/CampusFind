@@ -149,6 +149,7 @@ const PostFoundItem = () => {
         </div>
 
         {/* Photo Upload */}
+        {/* Photo Upload */}
         <div className="flex flex-col gap-2 w-full">
           <label className="flex items-center gap-2 font-medium text-gray-800">
             <Upload size={16} className="text-gray-600" />
@@ -156,7 +157,9 @@ const PostFoundItem = () => {
           </label>
           <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer w-full">
             <Upload size={24} className="text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600 font-medium">Click to upload a photo</p>
+            <p className="text-gray-600 font-medium">
+              {item.image ? item.image.name : "Click to upload a photo"}
+            </p>
             <p className="text-gray-500 text-sm mt-1">Helps others identify the item</p>
             <input
               type="file"
@@ -166,6 +169,7 @@ const PostFoundItem = () => {
             />
           </div>
         </div>
+
 
         {/* Submit & Reset Buttons */}
         <div className='w-full flex gap-4'>

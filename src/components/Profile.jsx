@@ -23,14 +23,6 @@ const Profile = () => {
   }
 
   const saveInput= async ()=>{
-    if(inputData.name===''||inputData.phn_no===''){
-      console.log('inputs cannot be empty');
-      return ;
-    }
-    else if(inputData.phn_no.length!==10){
-      console.log('Phone number should be 10 digits');
-      return;
-    }
     await updateUser(user.id,inputData).then(async ()=>{
       await getUser('id',user.id).then((res)=>{
         setUser({...user,name:res[0].name,phn_no:res[0].phn_no});
@@ -51,7 +43,7 @@ const Profile = () => {
   const userProfile = {
     name: user?.name || "Guest",
     initials: user?.name ? user.name.slice(0,1).toUpperCase() : "?",
-    phone: user?.phone || "Not set",
+    phone: user?.phn_no || "Not set",
     joinDate: formatDate(user.date) || '?',
     email: user?.email || "Not set"
   };
