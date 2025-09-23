@@ -1,17 +1,50 @@
-import React, { useState } from 'react';
-import { Eye, MapPin, Calendar, Edit3, TrendingUp, Target, CheckCircle, Phone } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Eye, MapPin, Calendar, Edit3, TrendingUp, Target, CheckCircle, Phone, Save, RefreshCw , X} from 'lucide-react';
 import { useAuth } from '../utils/AuthContext';
+import { updateUser,getUser } from '../../supabaseRoutes/supabaseUsers';
 
 const Profile = () => {
-  const {user}= useAuth();
+  const {user,setUser}= useAuth();
   const [activeTab, setActiveTab] = useState('Lost Items');
-  console.log(user);
+  const [edit,setEdit]= useState(false);
+  const [inputData,setInputData]= useState({name:'',phn_no:''});
+
+  // useEffect(()=>{
+  //   const xyzfunc= async ()=>{
+  //     await updateUser(user.id,{name:'Manoj',phn_no:'9032753439'}).then((res)=>{
+  //       console.log(res);
+  //     })
+  //   }
+  //   xyzfunc();
+  // })
+
+  const resetInput= ()=>{
+    setInputData({name:"",phn_no:""});
+  }
+
+  const saveInput= async ()=>{
+    await updateUser(user.id,inputData).then(async ()=>{
+      await getUser('id',user.id).then((res)=>{
+        setUser({...user,name:res[0].name,phn_no:res[0].phn_no});
+        setEdit(!edit);
+      })
+    })
+  }
+
+  function formatDate(inputDate) {
+    const date = new Date(inputDate); 
+    return date.toLocaleDateString("en-US", {
+      month: "short", 
+      year: "numeric", 
+    });
+  }
+
 
   const userProfile = {
     name: user?.name || "Guest",
-    initials: user?.name ? user.name.slice(0,1) : "?",
+    initials: user?.name ? user.name.slice(0,1).toUpperCase() : "?",
     phone: user?.phone || "Not set",
-    joinDate: 'September 2024',
+    joinDate: formatDate(user.date) || '?',
     email: user?.email || "Not set"
   };
 
@@ -57,7 +90,7 @@ const Profile = () => {
     <div className="max-w-6xl mx-auto bg-gray-50 min-h-screen p-4 sm:p-6">
       {/* User Profile Card */}
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 gap-4">
           {/* Avatar */}
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center relative mx-auto sm:mx-0">
             <span className="text-xl sm:text-2xl font-bold text-blue-600">{userProfile.initials}</span>
@@ -66,17 +99,31 @@ const Profile = () => {
           {/* User Info */}
           <div className="flex-1 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{userProfile.name}</h1>
-              <button className="flex items-center justify-center sm:justify-start space-x-1 text-gray-600 hover:text-gray-800 text-sm">
+              {edit ? (
+                <input
+                  className="w-45% border border-gray-300 rounded px-2 py-1"
+                  placeholder="Enter name"
+                  value={inputData.name}
+                  onChange={(e)=>{setInputData({...inputData,name:e.target.value})}}
+                />
+              ) : (
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  {userProfile.name}
+                </h1>
+              )}
+
+              {!edit && <button onClick={()=>{setEdit(!edit)}} className="flex items-center justify-center sm:justify-start space-x-1 text-gray-600 hover:text-gray-800 text-sm cursor-pointer">
                 <Edit3 className="w-4 h-4" />
                 <span>Edit Profile</span>
-              </button>
+              </button>}
+              {edit && <RefreshCw onClick={resetInput} className='hover:text-black/80 text-black cursor-pointer h-4'/>}
+              {edit && <Save onClick={saveInput} className='hover:text-green-300 text-green-500 cursor-pointer h-4'/>}
+              {edit && <X  onClick={()=>{setEdit(!edit)}} className='hover:text-red-300 text-red-500 cursor-pointer h-4'/>}
             </div>
-            
             <div className="space-y-1 text-gray-600 text-sm sm:text-base">
               <div className="flex items-center justify-center sm:justify-start space-x-2">
                 <Phone className="w-4 h-4" />
-                <span>{userProfile.phone}</span>
+                {edit?(<input value={inputData.phn_no} onChange={(e)=>{setInputData({...inputData,phn_no:e.target.value})}} className='p-1 outline-1 outline-gray-300 rounded-sm text-black' placeholder='Enter number'/>):(<span>{userProfile.phone}</span>)}
               </div>
               <div className="flex items-center justify-center sm:justify-start space-x-2">
                 <Calendar className="w-4 h-4" />

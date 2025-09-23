@@ -9,7 +9,7 @@ import { useAuth } from '../utils/AuthContext.jsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Notifications from './Notifications.jsx';
 import Profile from './Profile.jsx';
-import { addUser, getUsers, updateUser, deleteUser } from "../../supabaseCRUD.js";      
+import { addUser, getUsers, updateUser, deleteUser } from "../../supabaseRoutes/supabaseUsers.js";      
 
 const Home = () => {
     const {user,setUser}= useAuth();
@@ -27,6 +27,14 @@ const Home = () => {
         await signOut(auth);
         setUser("");
     };
+
+
+
+    // useEffect(()=>{
+    //     console.log(user);
+    // });
+
+
 
     // if (!user) {
     //     navigate('/auth');

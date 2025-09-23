@@ -1,4 +1,4 @@
-import { supabase } from "./src/config/supabase";
+import { supabase } from "../src/config/supabase";
 
 export const addUser = async (user) => {
   const { data, error } = await supabase
@@ -28,7 +28,7 @@ export const checkUser = async (columnName, value) => {
   }
 };
 
-export const getUser = async () => {
+export const getUsers = async () => {
   const { data, error } = await supabase
     .from("users")
     .select("*");
@@ -36,7 +36,7 @@ export const getUser = async () => {
   return data;
 };
 
-export const getUsers = async (columnName,value) => {
+export const getUser = async (columnName,value) => {
   const { data, error } = await supabase
     .from("users")
     .select("*")

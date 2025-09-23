@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { addUser,getUser,checkUser } from "../../supabaseCRUD";
+import { addUser,getUser,checkUser } from "../../supabaseRoutes/supabaseUsers";
 const PersonalDetails = () => {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ const PersonalDetails = () => {
       const exist =await checkUser("email",user.email);
       if(exist){
         await getUser('email',user.email).then((res)=>{
-          setUser({ ...user, name: res[0].name, phone: res[0].phn_no });
+          setUser({ ...user, name: res[0].name, phone: res[0].phn_no, id: res[0].id, date: res[0].date });
           navigate('/');
         })
 
