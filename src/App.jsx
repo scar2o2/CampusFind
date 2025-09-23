@@ -7,6 +7,7 @@ import { AuthProvider} from "./utils/AuthContext"
 import PageNotFound from "./components/PageNotFound"
 import PostItem from "./components/PostItem"
 import PersonalDetails from "./components/PersonalDetails"
+import Test from "./components/test"
 
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/founditem" element={<FoundItemPage/>}/>
           <Route path="/postitem" element={<PostItem/>}/>
           <Route path="/details" element={<PersonalDetails/>}/>
+          <Route path="/test" element={<Test/>}/>
           <Route path="*" element={<PageNotFound/>}/>
         </Routes>
       </BrowserRouter>
