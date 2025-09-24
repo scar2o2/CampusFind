@@ -13,7 +13,6 @@ const FoundItemPage = () => {
   useEffect(()=>{
     const fetchAllFoundItems= async ()=>{
       await getAllFoundItems().then((res)=>{
-        console.log(res);
         setFoundItems(res);
       });
     }

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, MapPin, Calendar, Edit3, TrendingUp, Target, CheckCircle, Phone, Save, RefreshCw , X} from 'lucide-react';
+import { Eye, MapPin, Calendar, Edit3, TrendingUp, Target, CheckCircle, Phone, Save, RefreshCw, X, Trash2Icon} from 'lucide-react';
 import { useAuth } from '../utils/AuthContext';
 import { updateUser,getUser } from '../../supabaseRoutes/supabaseUsers';
-import {getLostItemByUserId} from '../../supabaseRoutes/supabaseLostItems'
-import {getFoundItemsByUser} from '../../supabaseRoutes/supabaseFoundItems'
+import {deleteLostItem, getLostItemByUserId} from '../../supabaseRoutes/supabaseLostItems'
+import {deleteFoundItem, getFoundItemsByUser} from '../../supabaseRoutes/supabaseFoundItems'
 
 const Profile = () => {
   const {user,setUser}= useAuth();
@@ -13,24 +13,32 @@ const Profile = () => {
   const [lostItems,setLostItems]= useState([]);
   const [foundItems,setFoundItems]= useState([]);
   const [imageErrors, setImageErrors] = useState(new Set());
-
+  const [change,setChange]= useState(false);
   useEffect(()=>{
     const fetchData = async () => {
       const lost = await getLostItemByUserId(user.id);
       const found = await getFoundItemsByUser(user.id);
 
-      // normalize found items -> status: "Found"
-      const normalizedFound = found.map(f => ({...f, status: "Found"}));
+      const normalizedLost = lost.map(l => ({...l, status: "Lost"}));
 
-      setLostItems(lost);
-      console.log('Found',found);
-      setFoundItems(normalizedFound);
+      setLostItems(normalizedLost);
+      setFoundItems(found);
     };
     if (user?.id) fetchData();
-  },[user?.id]);
+  },[user?.id,change]);
 
   const resetInput= ()=>{
     setInputData({name:"",phn_no:""});
+  }
+
+  const deleteItem= async (item)=>{
+    if(item.status==='Lost'){
+      await deleteLostItem(item.id); 
+    }
+    else{
+      await deleteFoundItem(item.id);
+    }
+    setChange(!change);
   }
 
   const saveInput= async ()=>{
@@ -245,12 +253,6 @@ const Profile = () => {
                         }`}>
                           {itemStatus}
                         </span>
-                        {/* Status Badge for items without image or for lost items */}
-                        {(isLostItem || !hasValidImage) && item.isMatched && (
-                          <span className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold bg-green-600 text-white rounded-full shadow-sm border border-green-700">
-                            ✓ Matched!
-                          </span>
-                        )}
                       </div>
                     </div>
 
@@ -287,6 +289,9 @@ const Profile = () => {
                       <div className="flex items-center text-xs text-gray-500">
                         <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
                         <span>Posted {itemDate ? formatDate(itemDate) : 'recently'}</span>
+                      </div>
+                      <div onClick={()=>{deleteItem(item)}} className='bg-black py-3 px-2  rounded-full cursor-pointer hover:bg-black/80'>
+                        <Trash2Icon className='h-4 text-gray-200'/>
                       </div>
                     </div>
                   </div>

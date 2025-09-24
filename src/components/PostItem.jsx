@@ -57,13 +57,9 @@ const PostItem = () => {
                     </h2>
                 </div>
                 <div className="flex gap-2 sm:gap-3 items-center">
-                    <button
-                        onClick={() => { navigate('/postitem') }}
-                        className="text-white bg-blue-600 cursor-pointer px-2 py-2 flex gap-2 rounded-lg hover:bg-blue-600/80 hidden sm:flex"
-                    >
-                        <img className="h-7 p-1" src="/plus.svg" />
-                        Post Item
-                    </button>
+                    <div onClick={()=>{navigate('/', { state: 'profilePage' });}} className='py-3 px-4 cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-full hidden sm:flex'>
+                        {user?.name?.slice(0,1).toUpperCase()}                        
+                    </div>
                     <div className="relative" ref={dropdownRef}>
                         <div
                             className="p-3 cursor-pointer hover:bg-gray-200 rounded-full text-xl font-bold select-none"

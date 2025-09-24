@@ -13,7 +13,6 @@ const LostItemPage = () => {
   useEffect(()=>{
     const fetchAllLostItems= async ()=>{
       await fetchLostItems().then((res)=>{
-        console.log(res);
         setAllLostItems(res);
       });
     }

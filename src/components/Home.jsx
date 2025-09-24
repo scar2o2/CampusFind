@@ -9,8 +9,8 @@ import { useAuth } from '../utils/AuthContext.jsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Notifications from './Notifications.jsx';
 import Profile from './Profile.jsx';
-import { addUser, getUsers, updateUser, deleteUser } from "../../supabaseRoutes/supabaseUsers.js";      
-import { createLostPost } from '../../supabaseRoutes/supabaseLostItems.js';
+import { fetchLostItems } from '../../supabaseRoutes/supabaseLostItems.js';
+import { getAllFoundItems } from '../../supabaseRoutes/supabaseFoundItems.js';
 
 const Home = () => {
     const {user,setUser}= useAuth();
@@ -23,34 +23,31 @@ const Home = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [status,setStatus]= useState('lost');
     const dropdownRef = useRef(null);
+    const [recentLost,setRecentLost]= useState([]);
+    const [recentFound,setRecentFound]= useState([]);
 
     const logOut = async () => {
         await signOut(auth);
         setUser("");
     };
 
+    useEffect(()=>{
+        const fetchItems= async ()=>{
+            if(status==='lost'){
+                await fetchLostItems().then((res)=>{
+                    setRecentLost(res.slice(0, 2));
 
+                });
+            }
+            else{
+                await getAllFoundItems().then((res)=>{
+                    setRecentFound(res.slice(0, 2));
+                });
+            }
+        }
+        fetchItems();
+    },[status]);
 
-    // useEffect(()=>{
-    //     createLostPost();
-    // });
-
-
-
-    // if (!user) {
-    //     navigate('/auth');
-    //     // return (
-    //     //     <div className="flex items-center justify-center h-screen bg-gray-50">
-    //     //         <div className="text-center">
-    //     //             <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
-    //     //             <p className="text-gray-600">Please log in to access your dashboard.</p>
-    //     //             <div className="flex items-center gap-3 mt-2">
-    //     //                 <button className="px-5 py-2 bg-black text-white rounded-lg hover:bg-black/80 cursor-pointer flex-1" onClick={()=>{navigate('/auth')}}>Login</button>
-    //     //             </div>
-    //     //         </div>
-    //     //     </div>
-    //     // );
-    // }
     useEffect(()=>{
         if(!user) navigate('/auth');
     },[user])
@@ -193,12 +190,14 @@ const Home = () => {
                             <div className='w-full'>
                                 {status==='lost'?
                                     (<div className='flex flex-col w-full p-4 md:grid md:grid-cols-2 md:gap-3 gap-3'>
-                                        <LostItemCard item={"iPhone 14 Pro"} category={"Phone"} status={"Lost"} description={"Black iPhone with a blue case, lost near the library entrance"} location={"Library"} time={"2 hours ago"} /> 
-                                        <LostItemCard item={"Brown Leather Wallet"} category={"Wallet"} status={"Lost"} description={"Lost in parking lot C, contains student ID"} location={"Parking Lot c"} time={"4 hours ago"} /> 
+                                        {recentLost.map((item)=>{
+                                            return <LostItemCard key={item.id} item={item.name} category={item.category} status={"Lost"} description={item.description} location={item.location} time={item.lostDate} /> 
+                                        })}
                                     </div>):
                                     (<div className='flex flex-col w-full p-4 md:grid md:grid-cols-2 md:gap-3 gap-3'>
-                                        <FoundItemCard url={url3} item={"Car Keys"} category={"Keys"} status={"found"} description={"Was lying down below the CPU compartment"} location={"FFL Lab"} time={"2 mins ago"} /> 
-                                        <FoundItemCard url={url4} item={"Watch"} category={"Accessories"} status={"found"} description={"Found in Library, next to Ethical Hacking section"} location={"Library"} time={"10 hours ago"} /> 
+                                        {recentFound.map((item)=>{
+                                            return <FoundItemCard key={item.id} url={item.image_url} item={item.name} category={item.category} status={"Found"} description={item.description} location={item.location} time={item.foundDate} /> 
+                                        })}
                                     </div>)
                                 }
                             </div>
