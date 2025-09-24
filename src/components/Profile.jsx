@@ -129,25 +129,29 @@ const Profile = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className='flex justify-center mb-6 sm:mb-8'>
-        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-6 w-full max-w-2xl justify-center items-center">
-          <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm">
+      <div className="flex justify-center mb-6 sm:mb-8">
+        <div className="grid md:grid-cols-2 gap-3 sm:gap-6 w-full max-w-lg place-items-center ">
+          <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm w-full">
             <div className="flex justify-center mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
               </div>
             </div>
-            <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.totalPosts}</div>
+            <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+              {stats.totalPosts}
+            </div>
             <div className="text-gray-600 text-xs sm:text-base">Total Posts</div>
           </div>
-          
-          <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm">
+
+          <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm w-full">
             <div className="flex justify-center mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-12 sm:h-12 bg-cyan-100 rounded-full flex items-center justify-center">
                 <Target className="w-4 h-4 sm:w-6 sm:h-6 text-cyan-600" />
               </div>
             </div>
-            <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.itemsFound}</div>
+            <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+              {stats.itemsFound}
+            </div>
             <div className="text-gray-600 text-xs sm:text-base">Items Found</div>
           </div>
         </div>
