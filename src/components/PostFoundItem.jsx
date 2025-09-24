@@ -34,6 +34,7 @@ const PostFoundItem = () => {
     };
     // console.log('url2:',newItem.image_url)
     await createFoundItem(newItem);
+    reset();
   }
 
   const reset = () => {

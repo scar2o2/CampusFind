@@ -14,12 +14,13 @@ const PostLostItem = () => {
     userId: user?.id
   });
 
-  const postLostItem = () => {
+  const postLostItem = async () => {
     if(item.name===''||item.category===''||item.description===''||item.location===''||item.lostDate==='') {
       console.log('All fields are required');
       return;
     }
-    createLostPost(item);
+    await createLostPost(item);
+    reset();
   };
 
   const reset = () => {

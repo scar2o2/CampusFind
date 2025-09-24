@@ -57,7 +57,7 @@ const Profile = () => {
   const userProfile = {
     name: user?.name || "Guest",
     initials: user?.name ? user.name.slice(0,1).toUpperCase() : "?",
-    phone: user?.phn_no || "Not set",
+    phone: user?.phn_no || user.phone,
     joinDate: formatDate(user.date) || '?',
     email: user?.email || "Not set"
   };
@@ -65,7 +65,6 @@ const Profile = () => {
   const stats = {
     totalPosts: lostItems.length + foundItems.length,
     itemsFound: foundItems.length,
-    successfulMatches: [...lostItems, ...foundItems].filter(item => item.isMatched).length,
   };
 
   const currentItems = activeTab === 'Lost Items' ? lostItems : foundItems;
@@ -123,7 +122,7 @@ const Profile = () => {
 
       {/* Stats Cards */}
       <div className='flex justify-center mb-6 sm:mb-8'>
-        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-6 w-full max-w-2xl">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-6 w-full max-w-2xl justify-center items-center">
           <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm">
             <div className="flex justify-center mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -142,16 +141,6 @@ const Profile = () => {
             </div>
             <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.itemsFound}</div>
             <div className="text-gray-600 text-xs sm:text-base">Items Found</div>
-          </div>
-          
-          <div className="bg-white rounded-lg p-3 sm:p-6 text-center shadow-sm">
-            <div className="flex justify-center mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
-              </div>
-            </div>
-            <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stats.successfulMatches}</div>
-            <div className="text-gray-600 text-xs sm:text-base">Successful Matches</div>
           </div>
         </div>
       </div>
