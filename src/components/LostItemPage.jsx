@@ -1,83 +1,32 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import LostItemCard from './LostItemCard';
 import { useAuth } from '../utils/AuthContext';
+import { fetchLostItems } from '../../supabaseRoutes/supabaseLostItems';
 
 const LostItemPage = () => {
   const [category, setCategory] = useState("All");
   const [location, setLocation] = useState("All");
   const [search, setSearch] = useState("");
-
+  const [allLostItems,setAllLostItems]= useState([]);
   const {user}= useAuth();
 
-  const lostItems = [
-    {
-      "itemName": "Black Wallet",
-      "status": "lost",
-      "category": "Accessories",
-      "description": "A leather wallet with multiple cards and some cash inside.",
-      "location": "Library",
-      "time": "10 mins ago"
-    },
-    {
-      "itemName": "iPhone 13",
-      "status": "lost",
-      "category": "Electronics",
-      "description": "Blue iPhone with a transparent case, may have a cracked screen.",
-      "location": "Cafeteria",
-      "time": "45 mins ago"
-    },
-    {
-      "itemName": "Laptop Bag",
-      "status": "lost",
-      "category": "Bags",
-      "description": "Gray laptop backpack containing a Dell laptop and charger.",
-      "location": "Bus Stop near Campus Gate",
-      "time": "2 hours ago"
-    },
-    {
-      "itemName": "Water Bottle",
-      "status": "lost",
-      "category": "Personal Items",
-      "description": "Steel water bottle with a sticker of a mountain on it.",
-      "location": "Gym Hall",
-      "time": "5 hours ago"
-    },
-    {
-      "itemName": "ID Card",
-      "status": "lost",
-      "category": "Documents",
-      "description": "Student ID card with name and photo, attached to a red lanyard.",
-      "location": "Main Auditorium",
-      "time": "1 day ago"
-    },
-    {
-      "itemName": "Earbuds",
-      "status": "lost",
-      "category": "Electronics",
-      "description": "White wireless earbuds in a small charging case.",
-      "location": "Parking Lot B",
-      "time": "3 days ago"
+  useEffect(()=>{
+    const fetchAllLostItems= async ()=>{
+      await fetchLostItems().then((res)=>{
+        console.log(res);
+        setAllLostItems(res);
+      });
     }
-  ];
+    fetchAllLostItems();
+  },[]);
 
-  const uniqueCategories = [...new Set(lostItems.map(item => item.category))];
-  const uniqueLocations = [...new Set(lostItems.map(item => item.location))];
+  const uniqueCategories = [...new Set(allLostItems.map(item => item.category))];
+  const uniqueLocations = [...new Set(allLostItems.map(item => item.location))];
 
-  const parseTime = (time) => {
-    const [num, unit] = time.split(" ");
-    const n = parseInt(num);
-    if (unit.startsWith("min")) return n;
-    if (unit.startsWith("hour")) return n * 60;
-    if (unit.startsWith("day")) return n * 1440;
-    if (unit.startsWith("week")) return n * 10080;
-    return Infinity;
-  };
-
-  const sortedItems = [...lostItems].sort((a, b) => parseTime(a.time) - parseTime(b.time));
-  const filteredItems = sortedItems.filter((item) => {
+  const filteredItems = allLostItems.filter((item) => {
     const matchesCategory = category === "All" || item.category === category;
     const matchesLocation = location === "All" || item.location === location;
-    const matchesSearch = item.itemName.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesLocation && matchesSearch;
   });
 
@@ -168,13 +117,13 @@ const LostItemPage = () => {
         <div className='flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3'>
           {filteredItems.map((item) => (
             <LostItemCard 
-              key={item.itemName}
-              item={item.itemName} 
+              key={item.id}
+              item={item.name} 
               category={item.category} 
               status={"Lost"} 
               description={item.description} 
               location={item.location} 
-              time={item.time} 
+              time={item.lostDate} 
             />
           ))}
         </div>
