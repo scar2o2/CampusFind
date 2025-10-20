@@ -1,110 +1,126 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Users, MessageCircle, MapPin, CheckCircle, Bell } from 'lucide-react';
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('All');
-  
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'match',
-      icon: Users,
-      iconColor: 'text-green-600',
-      iconBg: 'bg-green-100',
-      title: 'Potential Match Found!',
-      description: 'Your lost iPhone 13 might match a found item posted by John D.',
-      time: '2 minutes ago',
-      isNew: true,
-      isUnread: true
-    },
-    {
-      id: 2,
-      type: 'message',
-      icon: MessageCircle,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-100',
-      title: 'New Message',
-      description: 'Sarah M. sent you a message about your found wallet',
-      time: '1 hour ago',
-      isNew: true,
-      isUnread: true
-    },
-    {
-      id: 3,
-      type: 'location',
-      icon: MapPin,
-      iconColor: 'text-purple-600',
-      iconBg: 'bg-purple-100',
-      title: 'Item Found Nearby',
-      description: 'Someone found a laptop bag near your location',
-      time: '3 hours ago',
-      isNew: false,
-      isUnread: false
-    },
-    {
-      id: 4,
-      type: 'confirmed',
-      icon: CheckCircle,
-      iconColor: 'text-green-600',
-      iconBg: 'bg-green-100',
-      title: 'Match Confirmed',
-      description: 'Great news! Your lost keys have been successfully returned',
-      time: '1 day ago',
-      isNew: false,
-      isUnread: false
-    },
-    {
-      id: 5,
-      type: 'summary',
-      icon: Bell,
-      iconColor: 'text-orange-600',
-      iconBg: 'bg-orange-100',
-      title: 'Weekly Summary',
-      description: 'You helped 3 people find their lost items this week!',
-      time: '2 days ago',
-      isNew: false,
-      isUnread: false
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const hasFetched = useRef(false); // prevent double fetching
 
-  // Calculate dynamic counts
+  // Fetch notifications once
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const fetchNotifications = async () => {
+      try {
+        // Call your edge function
+        const edgeResp = await fetch(
+          "https://khxejpxoiptfcbcdeuvi.supabase.co/functions/v1/super-worker",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + supabaseAnonKey,
+            },
+            body: JSON.stringify({
+              record: {
+                id: 101,          // example lostItem ID
+                category: "bags",
+                lostDate: "2025-09-23",
+                userId: 20
+              },
+            }),
+          }
+        );
+        const edgeData = await edgeResp.json();
+        console.log("Edge function result:", edgeData);
+
+        // Fetch notifications from Supabase table
+        const res = await fetch(`${supabaseUrl}/rest/v1/notifications2?select=*`, {
+          headers: {
+            "apikey": supabaseAnonKey,
+            "Authorization": "Bearer " + supabaseAnonKey,
+          },
+        });
+        const notifData = await res.json();
+        console.log("Fetched notifications:", notifData);
+
+        // Transform notifications for UI
+        setNotifications(
+          notifData.map((n) => ({
+            id: n.id,
+            type: "match",
+            icon: Users,
+            iconColor: "text-green-600",
+            iconBg: "bg-green-100",
+            title: "Potential Match Found!",
+            description: n.message,
+            time: new Date(n.created_at).toLocaleString(),
+            isNew: !n.isread,
+            isUnread: !n.isread,
+          }))
+        );
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Mark single notification as read
+  const markAsRead = async (id) => {
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/notifications2?id=eq.${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseAnonKey,
+          "Authorization": "Bearer " + supabaseAnonKey,
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify({ isread: true }),
+      });
+
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isUnread: false, isNew: false } : n)
+      );
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = async () => {
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/notifications2`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseAnonKey,
+          "Authorization": "Bearer " + supabaseAnonKey,
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify({ isread: true }),
+      });
+
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, isUnread: false, isNew: false }))
+      );
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
+    }
+  };
+
   const unreadCount = notifications.filter(n => n.isUnread).length;
   const totalCount = notifications.length;
-
   const tabs = [
     { name: 'All', count: totalCount },
     { name: 'Unread', count: unreadCount },
-    { name: 'Matches', count: null },
-    { name: 'Messages', count: null }
   ];
-
-  const filteredNotifications = notifications.filter(notification => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'Unread') return notification.isUnread;
-    if (activeTab === 'Matches') return notification.type === 'match' || notification.type === 'confirmed';
-    if (activeTab === 'Messages') return notification.type === 'message';
-    return true;
-  });
-
-  const markAsRead = (id) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.map(notification =>
-        notification.id === id
-          ? { ...notification, isUnread: false, isNew: false }
-          : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prevNotifications =>
-      prevNotifications.map(notification => ({
-        ...notification,
-        isUnread: false,
-        isNew: false
-      }))
-    );
-  };
+  const filteredNotifications = notifications.filter(n => activeTab === 'All' || (activeTab === 'Unread' && n.isUnread));
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
@@ -129,7 +145,7 @@ const Notifications = () => {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 px-6">
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
@@ -146,43 +162,29 @@ const Notifications = () => {
 
       {/* Notifications List */}
       <div className="p-6 space-y-4">
-        {filteredNotifications.map((notification) => {
-          const IconComponent = notification.icon;
-          
+        {filteredNotifications.map(n => {
+          const IconComponent = n.icon;
           return (
             <div
-              key={notification.id}
+              key={n.id}
               className={`relative flex items-start space-x-4 p-4 rounded-lg border transition-colors hover:bg-gray-50 ${
-                notification.isUnread 
-                  ? 'bg-blue-50 border-l-4 border-l-blue-500 border-gray-200' 
-                  : 'bg-white border-gray-200'
+                n.isUnread ? 'bg-blue-50 border-l-4 border-l-blue-500 border-gray-200' : 'bg-white border-gray-200'
               }`}
             >
-              {/* Icon */}
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notification.iconBg}`}>
-                <IconComponent className={`w-5 h-5 ${notification.iconColor}`} />
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${n.iconBg}`}>
+                <IconComponent className={`w-5 h-5 ${n.iconColor}`} />
               </div>
-
-              {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {notification.title}
-                  </h3>
-                  {notification.isNew && (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                      New
-                    </span>
-                  )}
+                  <h3 className="text-lg font-semibold text-gray-900">{n.title}</h3>
+                  {n.isNew && <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">New</span>}
                 </div>
-                <p className="text-gray-600 mb-2">{notification.description}</p>
-                <p className="text-sm text-gray-500">{notification.time}</p>
+                <p className="text-gray-600 mb-2">{n.description}</p>
+                <p className="text-sm text-gray-500">{n.time}</p>
               </div>
-
-              {/* Mark as read button */}
-              {notification.isUnread && (
+              {n.isUnread && (
                 <button
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => markAsRead(n.id)}
                   className="flex-shrink-0 text-gray-400 hover:text-gray-600 text-sm font-medium"
                 >
                   Mark as read
