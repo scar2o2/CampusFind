@@ -1,92 +1,106 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Users, MessageCircle, MapPin, CheckCircle, Bell } from 'lucide-react';
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { Users, Bell } from "lucide-react";
 
 const Notifications = () => {
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState("All");
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const hasFetched = useRef(false); // prevent double fetching
+  const hasFetched = useRef(false);
 
   // Fetch notifications once
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/notifications2?select=*,lost_user_phone,found_user_phone,type&order=created_at.desc`,
+        {
+          headers: {
+            "apikey": supabaseAnonKey,
+            Authorization: "Bearer " + supabaseAnonKey,
+          },
+        }
+      );
+      const notifData = await res.json();
+
+      setNotifications(
+        notifData.map((n) => ({
+          id: n.id,
+          type: n.type,
+          icon: Users,
+          iconColor: "text-green-600",
+          iconBg: "bg-green-100",
+          title: "Potential Match Found!",
+          description: n.message,
+          lostUserPhone: n.lost_user_phone,
+          foundUserPhone: n.found_user_phone,
+          time: new Date(n.created_at).toLocaleString(),
+          isNew: !n.isread,
+          isUnread: !n.isread,
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
+    fetchNotifications();
 
-    const fetchNotifications = async () => {
-      try {
-        // Call your edge function
-        const edgeResp = await fetch(
-          "https://khxejpxoiptfcbcdeuvi.supabase.co/functions/v1/super-worker",
+    // Real-time subscription
+    const channel = new EventSource(
+      `${supabaseUrl}/realtime/v1/notifications2?apikey=${supabaseAnonKey}`
+    );
+
+    channel.onmessage = (msg) => {
+      const payload = JSON.parse(msg.data);
+      if (payload.eventType === "INSERT") {
+        setNotifications((prev) => [
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + supabaseAnonKey,
-            },
-            body: JSON.stringify({
-              record: {
-                id: 101,          // example lostItem ID
-                category: "bags",
-                lostDate: "2025-09-23",
-                userId: 20
-              },
-            }),
-          }
-        );
-        const edgeData = await edgeResp.json();
-        console.log("Edge function result:", edgeData);
-
-        // Fetch notifications from Supabase table
-        const res = await fetch(`${supabaseUrl}/rest/v1/notifications2?select=*`, {
-          headers: {
-            "apikey": supabaseAnonKey,
-            "Authorization": "Bearer " + supabaseAnonKey,
-          },
-        });
-        const notifData = await res.json();
-        console.log("Fetched notifications:", notifData);
-
-        // Transform notifications for UI
-        setNotifications(
-          notifData.map((n) => ({
-            id: n.id,
-            type: "match",
+            id: payload.new.id,
+            type: payload.new.type,
             icon: Users,
             iconColor: "text-green-600",
             iconBg: "bg-green-100",
             title: "Potential Match Found!",
-            description: n.message,
-            time: new Date(n.created_at).toLocaleString(),
-            isNew: !n.isread,
-            isUnread: !n.isread,
-          }))
-        );
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
+            description: payload.new.message,
+            lostUserPhone: payload.new.lost_user_phone,
+            foundUserPhone: payload.new.found_user_phone,
+            time: new Date(payload.new.created_at).toLocaleString(),
+            isNew: !payload.new.isread,
+            isUnread: !payload.new.isread,
+          },
+          ...prev,
+        ]);
       }
     };
 
-    fetchNotifications();
+    return () => channel.close();
   }, []);
 
-  // Mark single notification as read
+  // Mark one notification as read
   const markAsRead = async (id) => {
     try {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isUnread: false, isNew: false } : n))
+      );
+
       await fetch(`${supabaseUrl}/rest/v1/notifications2?id=eq.${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "apikey": supabaseAnonKey,
-          "Authorization": "Bearer " + supabaseAnonKey,
-          "Prefer": "return=representation"
+          apikey: supabaseAnonKey,
+          Authorization: "Bearer " + supabaseAnonKey,
+          Prefer: "return=representation",
         },
         body: JSON.stringify({ isread: true }),
       });
-
-      setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, isUnread: false, isNew: false } : n)
-      );
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
@@ -95,32 +109,40 @@ const Notifications = () => {
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, isUnread: false, isNew: false }))
+      );
+
       await fetch(`${supabaseUrl}/rest/v1/notifications2`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "apikey": supabaseAnonKey,
-          "Authorization": "Bearer " + supabaseAnonKey,
-          "Prefer": "return=representation"
+          apikey: supabaseAnonKey,
+          Authorization: "Bearer " + supabaseAnonKey,
+          Prefer: "return=representation",
         },
         body: JSON.stringify({ isread: true }),
       });
-
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, isUnread: false, isNew: false }))
-      );
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
     }
   };
 
-  const unreadCount = notifications.filter(n => n.isUnread).length;
+  const unreadCount = notifications.filter((n) => n.isUnread).length;
   const totalCount = notifications.length;
+
   const tabs = [
-    { name: 'All', count: totalCount },
-    { name: 'Unread', count: unreadCount },
+    { name: "All", count: totalCount },
+    { name: "Unread", count: unreadCount },
   ];
-  const filteredNotifications = notifications.filter(n => activeTab === 'All' || (activeTab === 'Unread' && n.isUnread));
+
+  const filteredNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (n) => activeTab === "All" || (activeTab === "Unread" && n.isUnread)
+      ),
+    [notifications, activeTab]
+  );
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
@@ -128,14 +150,16 @@ const Notifications = () => {
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div>
           <h1 className="text-3xl font-bold text-blue-600 mb-2">Notifications</h1>
-          <p className="text-gray-500">Stay updated with matches, messages, and activity</p>
+          <p className="text-gray-500">
+            Stay updated with matches, messages, and activity
+          </p>
         </div>
         <button
           onClick={markAllAsRead}
           className={`font-medium transition-colors ${
             unreadCount > 0
-              ? 'text-blue-600 hover:text-blue-800 cursor-pointer'
-              : 'text-gray-400 cursor-not-allowed'
+              ? "text-blue-600 hover:text-blue-800 cursor-pointer"
+              : "text-gray-400 cursor-not-allowed"
           }`}
           disabled={unreadCount === 0}
         >
@@ -145,14 +169,14 @@ const Notifications = () => {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 px-6">
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
             className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
               activeTab === tab.name
-                ? 'border-blue-600 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? "border-blue-600 text-gray-900"
+                : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
             {tab.name} {tab.count && `(${tab.count})`}
@@ -162,47 +186,66 @@ const Notifications = () => {
 
       {/* Notifications List */}
       <div className="p-6 space-y-4">
-        {filteredNotifications.map(n => {
-          const IconComponent = n.icon;
-          return (
-            <div
-              key={n.id}
-              className={`relative flex items-start space-x-4 p-4 rounded-lg border transition-colors hover:bg-gray-50 ${
-                n.isUnread ? 'bg-blue-50 border-l-4 border-l-blue-500 border-gray-200' : 'bg-white border-gray-200'
-              }`}
-            >
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${n.iconBg}`}>
-                <IconComponent className={`w-5 h-5 ${n.iconColor}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{n.title}</h3>
-                  {n.isNew && <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">New</span>}
-                </div>
-                <p className="text-gray-600 mb-2">{n.description}</p>
-                <p className="text-sm text-gray-500">{n.time}</p>
-              </div>
-              {n.isUnread && (
-                <button
-                  onClick={() => markAsRead(n.id)}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 text-sm font-medium"
-                >
-                  Mark as read
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {loading && <p className="text-center text-gray-500">Loading notifications...</p>}
 
-        {filteredNotifications.length === 0 && (
+        {!loading && filteredNotifications.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-            <p className="text-gray-500">You're all caught up! Check back later for updates.</p>
+            <p className="text-gray-500">
+              You're all caught up! Check back later for updates.
+            </p>
           </div>
         )}
+
+        {!loading &&
+          filteredNotifications.map((n) => {
+            const IconComponent = n.icon;
+            const phoneToShow = n.type === "lost" ? n.foundUserPhone : n.lostUserPhone;
+            const phoneLabel = n.type === "lost" ? "Found User Phone" : "Lost User Phone";
+
+            return (
+              <div
+                key={n.id}
+                className={`relative flex flex-col md:flex-row items-start space-x-0 md:space-x-4 p-4 rounded-lg border transition-colors hover:bg-gray-50 ${
+                  n.isUnread
+                    ? "bg-blue-50 border-l-4 border-l-blue-500 border-gray-200"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div
+                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${n.iconBg}`}
+                >
+                  <IconComponent className={`w-5 h-5 ${n.iconColor}`} />
+                </div>
+                <div className="flex-1 min-w-0 mt-2 md:mt-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{n.title}</h3>
+                    {n.isNew && (
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                        New
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-600 mb-1">{n.description}</p>
+                  <p className="text-gray-500 text-sm mb-1">
+                    <span className="font-medium">{phoneLabel}:</span> {phoneToShow}
+                  </p>
+                  <p className="text-gray-500 text-sm">{n.time}</p>
+                </div>
+                {n.isUnread && (
+                  <button
+                    onClick={() => markAsRead(n.id)}
+                    className="flex-shrink-0 text-gray-400 hover:text-gray-600 text-sm font-medium mt-2 md:mt-0"
+                  >
+                    Mark as read
+                  </button>
+                )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );
