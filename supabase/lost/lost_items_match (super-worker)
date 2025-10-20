@@ -1,0 +1,75 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+serve(async (req)=>{
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(JSON.stringify({
+      status: "ok"
+    }), {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "authorization, content-type",
+        "Content-Type": "application/json"
+      }
+    });
+  }
+  // Initialize Supabase client with service role key
+  const supabase = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+  try {
+    const body = await req.json();
+    const { id: lostItemId, category, lostDate, userId: lostUserId } = body.record;
+    // 1️⃣ Fetch matching found items
+    const { data: foundItems, error: foundError } = await supabase.from("found_items").select("*").eq("category", category).gte("foundDate", lostDate);
+    if (foundError) throw foundError;
+    if (!foundItems || foundItems.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: "No matches found",
+        created: []
+      }), {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    // 2️⃣ Prepare notifications, avoiding duplicates
+    const createdNotifications = [];
+    for (const foundItem of foundItems){
+      // Check if notification already exists
+      const { data: existing, error: checkError } = await supabase.from("notifications2").select("*").eq("userid", lostUserId).eq("lostitemid", lostItemId).eq("founditemid", foundItem.id).single();
+      if (checkError && checkError.code !== "PGRST116") throw checkError; // ignore "no row found" error
+      if (!existing) {
+        const message = `A potential match found for your lost item "${body.record.name}" (Category: ${category})`;
+        const { data: newNotif, error: insertError } = await supabase.from("notifications2").insert({
+          userid: lostUserId,
+          lostitemid: lostItemId,
+          founditemid: foundItem.id,
+          message
+        }).select().single();
+        if (insertError) throw insertError;
+        createdNotifications.push(newNotif);
+      }
+    }
+    return new Response(JSON.stringify({
+      success: true,
+      message: `Created ${createdNotifications.length} new notifications.`,
+      created: createdNotifications
+    }), {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  } catch (error) {
+    console.error("Edge Function Error:", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  }
+});

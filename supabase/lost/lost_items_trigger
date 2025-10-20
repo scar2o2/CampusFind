@@ -1,0 +1,36 @@
+CREATE OR REPLACE FUNCTION public.notify_on_lost_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- For every found item matching the new lost item
+  INSERT INTO public.notifications2 (
+      userid,
+      lostitemid,
+      founditemid,
+      message,
+      lost_user_phone,
+      found_user_phone,
+      type
+  )
+  SELECT
+      NEW."userId", -- lost item owner
+      NEW.id,
+      f.id,
+      'A potential match found for your lost item "' || NEW.name || '" (Category: ' || NEW.category || ')',
+      lu.phn_no,    -- lost item owner's phone
+      fu.phn_no,    -- found item owner's phone
+      'lost'        -- type
+  FROM public.found_items f
+  JOIN public.users lu ON lu.id = NEW."userId"
+  JOIN public.users fu ON fu.id = f."userId"
+  WHERE f.category = NEW.category
+    AND f."foundDate" >= NEW."lostDate"
+    AND NOT EXISTS (
+      SELECT 1 FROM public.notifications2 n
+      WHERE n.userid = NEW."userId"
+        AND n.lostitemid = NEW.id
+        AND n.founditemid = f.id
+    );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
