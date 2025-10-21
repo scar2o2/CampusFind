@@ -109,9 +109,11 @@ const Profile = () => {
                 <Edit3 className="w-4 h-4" />
                 <span>Edit Profile</span>
               </button>}
-              {edit && <RefreshCw onClick={resetInput} className='hover:text-black/80 text-black cursor-pointer h-4'/>}
-              {edit && <Save onClick={saveInput} className='hover:text-green-300 text-green-500 cursor-pointer h-4'/>}
-              {edit && <X  onClick={()=>{setEdit(!edit)}} className='hover:text-red-300 text-red-500 cursor-pointer h-4'/>}
+              <div className='flex items-center justify-center sm:justify-start space-x-2'>
+                {edit && <RefreshCw onClick={resetInput} className='hover:text-black/80 text-black cursor-pointer h-4'/>}
+                {edit && <Save onClick={saveInput} className='hover:text-green-300 text-green-500 cursor-pointer h-4'/>}
+                {edit && <X  onClick={()=>{setEdit(!edit)}} className='hover:text-red-300 text-red-500 cursor-pointer h-4'/>}
+              </div>
             </div>
             <div className="space-y-1 text-gray-600 text-sm sm:text-base">
               <div className="flex items-center justify-center sm:justify-start space-x-2">

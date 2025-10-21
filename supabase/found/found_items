@@ -16,3 +16,7 @@ create table public.found_items (
 create trigger trg_notify_on_found_insert
 after INSERT on found_items for EACH row
 execute FUNCTION notify_on_found_insert ();
+
+create trigger trigger_notify_on_found_insert
+after INSERT on found_items for EACH row
+execute FUNCTION notify_on_found_insert ();

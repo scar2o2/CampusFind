@@ -12,10 +12,14 @@ create table public.lost_items (
   constraint lost_items_userid_fkey foreign KEY ("userId") references users (id)
 ) TABLESPACE pg_default;
 
+create trigger lost_item_notify
+after INSERT on lost_items for EACH row
+execute FUNCTION notify_lost_item ();
+
 create trigger trg_notify_on_lost_insert
 after INSERT on lost_items for EACH row
 execute FUNCTION notify_on_lost_insert ();
 
-create trigger lost_item_notify
+create trigger trigger_notify_on_lost_insert
 after INSERT on lost_items for EACH row
-execute FUNCTION notify_lost_item ();
+execute FUNCTION notify_on_lost_insert ();
