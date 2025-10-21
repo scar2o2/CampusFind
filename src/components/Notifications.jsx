@@ -1,34 +1,33 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Users, Bell } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const hasFetched = useRef(false);
-
   // Fetch notifications once
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/notifications2?select=*,lost_user_phone,found_user_phone,type&order=created_at.desc`,
-        {
-          headers: {
-            "apikey": supabaseAnonKey,
-            Authorization: "Bearer " + supabaseAnonKey,
-          },
-        }
-      );
-      const notifData = await res.json();
+      const { data, error } = await supabase
+        .from("notifications2")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
 
       setNotifications(
-        notifData.map((n) => ({
+        data.map((n) => ({
           id: n.id,
-          type: n.type,
+          type: n.type, // "lost" or "found"
           icon: Users,
           iconColor: "text-green-600",
           iconBg: "bg-green-100",
@@ -48,59 +47,19 @@ const Notifications = () => {
     }
   };
 
-  useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    fetchNotifications();
-
-    // Real-time subscription
-    const channel = new EventSource(
-      `${supabaseUrl}/realtime/v1/notifications2?apikey=${supabaseAnonKey}`
-    );
-
-    channel.onmessage = (msg) => {
-      const payload = JSON.parse(msg.data);
-      if (payload.eventType === "INSERT") {
-        setNotifications((prev) => [
-          {
-            id: payload.new.id,
-            type: payload.new.type,
-            icon: Users,
-            iconColor: "text-green-600",
-            iconBg: "bg-green-100",
-            title: "Potential Match Found!",
-            description: payload.new.message,
-            lostUserPhone: payload.new.lost_user_phone,
-            foundUserPhone: payload.new.found_user_phone,
-            time: new Date(payload.new.created_at).toLocaleString(),
-            isNew: !payload.new.isread,
-            isUnread: !payload.new.isread,
-          },
-          ...prev,
-        ]);
-      }
-    };
-
-    return () => channel.close();
-  }, []);
-
-  // Mark one notification as read
+  // Mark a single notification as read
   const markAsRead = async (id) => {
     try {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isUnread: false, isNew: false } : n))
       );
 
-      await fetch(`${supabaseUrl}/rest/v1/notifications2?id=eq.${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-          Authorization: "Bearer " + supabaseAnonKey,
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify({ isread: true }),
-      });
+      const { error } = await supabase
+        .from("notifications2")
+        .update({ isread: true })
+        .eq("id", id);
+
+      if (error) throw error;
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
@@ -113,16 +72,11 @@ const Notifications = () => {
         prev.map((n) => ({ ...n, isUnread: false, isNew: false }))
       );
 
-      await fetch(`${supabaseUrl}/rest/v1/notifications2`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-          Authorization: "Bearer " + supabaseAnonKey,
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify({ isread: true }),
-      });
+      const { error } = await supabase
+        .from("notifications2")
+        .update({ isread: true });
+
+      if (error) throw error;
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
     }
@@ -143,6 +97,41 @@ const Notifications = () => {
       ),
     [notifications, activeTab]
   );
+
+  // Subscribe to real-time notifications
+  useEffect(() => {
+    fetchNotifications();
+
+    const channel = supabase
+      .channel("public:notifications2")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications2" },
+        (payload) => {
+          const n = payload.new;
+          setNotifications((prev) => [
+            {
+              id: n.id,
+              type: n.type,
+              icon: Users,
+              iconColor: "text-green-600",
+              iconBg: "bg-green-100",
+              title: "Potential Match Found!",
+              description: n.message,
+              lostUserPhone: n.lost_user_phone,
+              foundUserPhone: n.found_user_phone,
+              time: new Date(n.created_at).toLocaleString(),
+              isNew: !n.isread,
+              isUnread: !n.isread,
+            },
+            ...prev,
+          ]);
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
