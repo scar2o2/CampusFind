@@ -1,36 +1,79 @@
 CREATE OR REPLACE FUNCTION public.notify_on_lost_insert()
 RETURNS TRIGGER AS $$
+DECLARE
+    f_record RECORD;  -- loop variable for matching found items
 BEGIN
-  -- For every found item matching the new lost item
-  INSERT INTO public.notifications2 (
-      userid,
-      lostitemid,
-      founditemid,
-      message,
-      lost_user_phone,
-      found_user_phone,
-      type
-  )
-  SELECT
-      NEW."userId", -- lost item owner
-      NEW.id,
-      f.id,
-      'A potential match found for your lost item "' || NEW.name || '" (Category: ' || NEW.category || ')',
-      lu.phn_no,    -- lost item owner's phone
-      fu.phn_no,    -- found item owner's phone
-      'lost'        -- type
-  FROM public.found_items f
-  JOIN public.users lu ON lu.id = NEW."userId"
-  JOIN public.users fu ON fu.id = f."userId"
-  WHERE f.category = NEW.category
-    AND f."foundDate" >= NEW."lostDate"
-    AND NOT EXISTS (
-      SELECT 1 FROM public.notifications2 n
-      WHERE n.userid = NEW."userId"
-        AND n.lostitemid = NEW.id
-        AND n.founditemid = f.id
-    );
+    -- Loop over all found items that match the new lost item
+    FOR f_record IN
+        SELECT 
+            f.id AS found_item_id,
+            f.name AS found_item_name,
+            fu.id AS found_user_id,
+            fu.phn_no AS found_user_phone,
+            lu.phn_no AS lost_user_phone
+        FROM public.found_items f
+        JOIN public.users lu ON lu.id = NEW."userId"
+        JOIN public.users fu ON fu.id = f."userId"
+        WHERE f.category = NEW.category
+          AND f."foundDate" >= NEW."lostDate"
+          AND NOT EXISTS (
+            SELECT 1 FROM public.notifications2 n
+            WHERE n.lostitemid = NEW.id
+              AND n.founditemid = f.id
+          )
+    LOOP
+        -- Notification for lost item owner
+        INSERT INTO public.notifications2(
+            lost_user_id,
+            found_user_id,
+            lostitemid,
+            founditemid,
+            message,
+            isread,
+            created_at,
+            lost_user_phone,
+            found_user_phone,
+            type
+        ) VALUES (
+            NEW."userId",                    -- lost item owner
+            f_record.found_user_id,          -- found item owner
+            NEW.id,                          -- lost item id
+            f_record.found_item_id,          -- found item id
+            'A potential match found for your lost item "' || NEW.name || '" (Category: ' || NEW.category || ')',
+            false,                           -- default unread
+            now(),                           -- timestamp
+            f_record.lost_user_phone,        -- lost item owner's phone
+            f_record.found_user_phone,       -- found item owner's phone
+            'lost'                           -- type
+        );
 
-  RETURN NEW;
+        -- Notification for found item owner
+        INSERT INTO public.notifications2(
+            lost_user_id,
+            found_user_id,
+            lostitemid,
+            founditemid,
+            message,
+            isread,
+            created_at,
+            lost_user_phone,
+            found_user_phone,
+            type
+        ) VALUES (
+            NEW."userId",                    -- lost item owner
+            f_record.found_user_id,          -- found item owner
+            NEW.id,                          -- lost item id
+            f_record.found_item_id,          -- found item id
+            'A potential match found for your found item "' || f_record.found_item_name || '" (Category: ' || NEW.category || ')',
+            false,                           -- default unread
+            now(),                           -- timestamp
+            f_record.lost_user_phone,        -- lost item owner's phone
+            f_record.found_user_phone,       -- found item owner's phone
+            'found'                          -- type
+        );
+    END LOOP;
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+

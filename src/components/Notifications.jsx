@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Users, Bell } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "../utils/AuthContext";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -9,30 +10,46 @@ const supabase = createClient(
 );
 
 const Notifications = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("All");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch notifications once
+  const userId = user?.id;
+
+  // Fetch notifications for current user
   const fetchNotifications = async () => {
+    if (!userId) return;
+
     try {
       setLoading(true);
+
       const { data, error } = await supabase
         .from("notifications2")
         .select("*")
+        .or(`lost_user_id.eq.${userId},found_user_id.eq.${userId}`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
+      // Filter by type to show only notifications relevant to user's role
+      const filteredData = data.filter(
+        (n) =>
+          (n.type === "lost" && n.lost_user_id === userId) ||
+          (n.type === "found" && n.found_user_id === userId)
+      );
+
       setNotifications(
-        data.map((n) => ({
+        filteredData.map((n) => ({
           id: n.id,
-          type: n.type, // "lost" or "found"
+          type: n.type,
           icon: Users,
           iconColor: "text-green-600",
           iconBg: "bg-green-100",
           title: "Potential Match Found!",
           description: n.message,
+          lostUserId: n.lost_user_id,
+          foundUserId: n.found_user_id,
           lostUserPhone: n.lost_user_phone,
           foundUserPhone: n.found_user_phone,
           time: new Date(n.created_at).toLocaleString(),
@@ -47,19 +64,14 @@ const Notifications = () => {
     }
   };
 
-  // Mark a single notification as read
+  // Mark single notification as read
   const markAsRead = async (id) => {
     try {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isUnread: false, isNew: false } : n))
       );
 
-      const { error } = await supabase
-        .from("notifications2")
-        .update({ isread: true })
-        .eq("id", id);
-
-      if (error) throw error;
+      await supabase.from("notifications2").update({ isread: true }).eq("id", id);
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
@@ -67,16 +79,21 @@ const Notifications = () => {
 
   // Mark all notifications as read
   const markAllAsRead = async () => {
+    if (!userId) return;
+
     try {
+      const notificationIds = notifications.map((n) => n.id);
+
       setNotifications((prev) =>
         prev.map((n) => ({ ...n, isUnread: false, isNew: false }))
       );
 
-      const { error } = await supabase
-        .from("notifications2")
-        .update({ isread: true });
-
-      if (error) throw error;
+      if (notificationIds.length > 0) {
+        await supabase
+          .from("notifications2")
+          .update({ isread: true })
+          .in("id", notificationIds);
+      }
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
     }
@@ -98,8 +115,10 @@ const Notifications = () => {
     [notifications, activeTab]
   );
 
-  // Subscribe to real-time notifications
+  // Real-time subscription for current user
   useEffect(() => {
+    if (!userId) return;
+
     fetchNotifications();
 
     const channel = supabase
@@ -109,29 +128,38 @@ const Notifications = () => {
         { event: "INSERT", schema: "public", table: "notifications2" },
         (payload) => {
           const n = payload.new;
-          setNotifications((prev) => [
-            {
-              id: n.id,
-              type: n.type,
-              icon: Users,
-              iconColor: "text-green-600",
-              iconBg: "bg-green-100",
-              title: "Potential Match Found!",
-              description: n.message,
-              lostUserPhone: n.lost_user_phone,
-              foundUserPhone: n.found_user_phone,
-              time: new Date(n.created_at).toLocaleString(),
-              isNew: !n.isread,
-              isUnread: !n.isread,
-            },
-            ...prev,
-          ]);
+
+          const shouldShow =
+            (n.type === "lost" && n.lost_user_id === userId) ||
+            (n.type === "found" && n.found_user_id === userId);
+
+          if (shouldShow) {
+            setNotifications((prev) => [
+              {
+                id: n.id,
+                type: n.type,
+                icon: Users,
+                iconColor: "text-green-600",
+                iconBg: "bg-green-100",
+                title: "Potential Match Found!",
+                description: n.message,
+                lostUserId: n.lost_user_id,
+                foundUserId: n.found_user_id,
+                lostUserPhone: n.lost_user_phone,
+                foundUserPhone: n.found_user_phone,
+                time: new Date(n.created_at).toLocaleString(),
+                isNew: !n.isread,
+                isUnread: !n.isread,
+              },
+              ...prev,
+            ]);
+          }
         }
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, []);
+  }, [userId]);
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
@@ -139,9 +167,7 @@ const Notifications = () => {
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div>
           <h1 className="text-3xl font-bold text-blue-600 mb-2">Notifications</h1>
-          <p className="text-gray-500">
-            Stay updated with matches, messages, and activity
-          </p>
+          <p className="text-gray-500">Stay updated with matches, messages, and activity</p>
         </div>
         <button
           onClick={markAllAsRead}
@@ -168,7 +194,7 @@ const Notifications = () => {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab.name} {tab.count && `(${tab.count})`}
+            {tab.name} {tab.count > 0 && `(${tab.count})`}
           </button>
         ))}
       </div>
@@ -184,7 +210,7 @@ const Notifications = () => {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
             <p className="text-gray-500">
-              You're all caught up! Check back later for updates.
+              You currently have no notifications. Once a potential match is found, it will appear here.
             </p>
           </div>
         )}
@@ -192,6 +218,8 @@ const Notifications = () => {
         {!loading &&
           filteredNotifications.map((n) => {
             const IconComponent = n.icon;
+
+            // Show the other user's phone based on type
             const phoneToShow = n.type === "lost" ? n.foundUserPhone : n.lostUserPhone;
             const phoneLabel = n.type === "lost" ? "Found User Phone" : "Lost User Phone";
 
