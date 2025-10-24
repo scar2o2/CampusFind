@@ -10,14 +10,15 @@ export const createFoundItem = async (item) => {
       return null;
     }
 
-    alert("Found item posted successfully.");
+    console.log("Found item posted successfully.");
     return data;
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("Something went wrong while posting the found item.");
+    alert("Something went wrong.");
     return null;
   }
 };
+
 
 export const getAllFoundItems = async () => {
   try {
@@ -25,17 +26,13 @@ export const getAllFoundItems = async () => {
       .from("found_items")
       .select("*")
       .order("created_at", { ascending: false });
-
     if (error) {
       console.error("Fetch error:", error);
-      alert("Failed to fetch found items.");
       return [];
     } 
-
     return data;
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("Something went wrong while fetching found items.");
     return [];
   }
 };
@@ -47,17 +44,13 @@ export const getFoundItemsByUser = async (userId) => {
       .select("*")
       .eq("userId", userId)
       .order("created_at", { ascending: false });
-
     if (error) {
       console.error("Fetch error:", error);
-      alert("Failed to fetch your found items.");
       return [];
     }
-
     return data;
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("Something went wrong while fetching your found items.");
     return [];
   }
 };
@@ -68,18 +61,16 @@ export const deleteFoundItem = async (itemId) => {
       .from("found_items")
       .delete()
       .eq("id", itemId);  
-
     if (error) {
       console.error("Delete error:", error);
-      alert("Failed to delete the item.");
+      alert("Failed to delete item.");
       return null;
     }
-
-    alert("Item deleted successfully.");
+    console.log("Item deleted successfully.");
     return data;
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("Something went wrong while deleting the item.");
+    alert("Something went wrong.");
     return null;
   } 
 };

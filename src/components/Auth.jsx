@@ -53,12 +53,14 @@ const Auth = () => {
       setMsg("Signed in successfully!");
       setUser({...user,email:auth?.currentUser?.email});
       setErrMsg("");
-      navigate('/details');
+      setTimeout(() => {
+        navigate('/details');
+      }, 2000);
     } catch (e) {
       setErrMsg(e.message);
     }
-    setEmail("");
-    setPass("");
+    // setEmail("");
+    // setPass("");
   };
 
   return (
