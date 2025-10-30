@@ -35,7 +35,7 @@ const PostItem = () => {
     return (
         <div className="flex flex-col w-full min-h-screen overflow-x-hidden mt-17">
             <header className="flex justify-between w-full p-3 bg-transparent backdrop-blur-2xl fixed top-0 z-10 gap-2 sm:gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-blue-600" onClick={()=>{navigate('/')}}>CampusFind</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-blue-600" onClick={()=>{navigate('/')}}>ClaimIt</h1>
                 <div className="gap-4 items-center hidden sm:flex">
                     <h2
                         onClick={() => navigate('/', { state: 'home' })}

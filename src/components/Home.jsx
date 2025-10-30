@@ -55,7 +55,7 @@ const Home = () => {
     return (
         <div className="flex flex-col w-full min-h-screen mb-4 overflow-x-hidden">
             <header className="flex justify-between w-full p-3 bg-transparent backdrop-blur-2xl fixed top-0 z-10 gap-2 sm:gap-3 items-center">
-                <h1 className="text-2xl sm:text-3xl font-bold text-blue-600 cursor-pointer" onClick={()=>setPage('home')}>CampusFind</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-blue-600 cursor-pointer" onClick={()=>setPage('home')}>ClaimIt</h1>
                 <div className="gap-4 items-center hidden sm:flex">
                     <h2 onClick={() => setPage('home')} className={page==='home'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer"):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Home</h2>
                     <h2 onClick={() => setPage('lostItemPage')} className={page==='lostItemPage'?("text-blue-500 text-lg font-semibold hover:underline cursor-pointer "):("text-gray-500 text-lg font-semibold hover:underline cursor-pointer")}>Lost Items</h2>
@@ -131,7 +131,7 @@ const Home = () => {
 
                         <div className="flex flex-col">
                             <div className="flex flex-col gap-3 items-center text-center p-4">
-                                <h2 className="text-3xl font-bold">How CampusFind Works</h2>
+                                <h2 className="text-3xl font-bold">How ClaimIt Works</h2>
                                 <p className="text-gray-500 text-xl">
                                     Our system makes reuniting students with their belongings faster and easier than ever.
                                 </p>
