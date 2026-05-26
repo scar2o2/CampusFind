@@ -5,10 +5,11 @@ import React, { useState } from 'react';
 import { Tag, MapPin, Calendar, Upload } from 'lucide-react';
 import {useAuth} from '../../src/utils/AuthContext'
 import { createFoundItem } from '../../supabaseRoutes/supabaseFoundItems';
-import {getUploadImageUrl} from '../../supabaseRoutes/supabaseUploadImageGetURl'
+import { getSquareImageFile, getUploadImageUrl } from '../../supabaseRoutes/supabaseUploadImageGetURl'
 
 const PostFoundItem = () => {
   const {user}= useAuth();
+  const [isImageProcessing, setIsImageProcessing] = useState(false);
   const [item, setItem] = useState({
     name: "",
     category: "",
@@ -20,6 +21,7 @@ const PostFoundItem = () => {
   });
 
   const postFoundItem= async()=>{
+    if (isImageProcessing) return alert("Please wait for the image to finish processing.");
     if (!item.image) return alert("Please select an image first");
     const url = await getUploadImageUrl(item.image);
     // console.log('url1:',url)
@@ -36,6 +38,23 @@ const PostFoundItem = () => {
     await createFoundItem(newItem);
     reset();
   }
+
+  const handleImageChange = async (e) => {
+    const selectedImage = e.target.files[0];
+    if (!selectedImage) return;
+
+    try {
+      setIsImageProcessing(true);
+      const squareImage = await getSquareImageFile(selectedImage);
+      setItem((prev) => ({ ...prev, image: squareImage }));
+    } catch (error) {
+      console.error("Image resize error:", error);
+      alert("Could not process this image. Please choose another image.");
+      e.target.value = "";
+    } finally {
+      setIsImageProcessing(false);
+    }
+  };
 
   const reset = () => {
     setItem({
@@ -162,14 +181,18 @@ const PostFoundItem = () => {
           <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer w-full">
             <Upload size={24} className="text-gray-400 mx-auto mb-2" />
             <p className="text-gray-600 font-medium">
-              {item.image ? item.image.name : "Click to upload a photo"}
+              {isImageProcessing
+                ? "Converting image to 500 x 500..."
+                : item.image
+                  ? item.image.name
+                  : "Click to upload a photo"}
             </p>
             <p className="text-gray-500 text-sm mt-1">Helps others identify the item</p>
             <input
               type="file"
               accept="image/*"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={(e) => setItem({ ...item, image: e.target.files[0] })}
+              onChange={handleImageChange}
             />
           </div>
         </div>

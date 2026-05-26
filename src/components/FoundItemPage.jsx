@@ -114,7 +114,7 @@ const FoundItemPage = () => {
       </div>
       <div className=''>
         <p className='text-gray-500 font-normal text-lg'>{filteredItems.length} items found</p>
-        <div className='flex flex-col w-full p-4 md:grid md:grid-cols-2 md:gap-3 gap-3'>
+        <div className='flex flex-col w-full p-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 gap-5'>
           {filteredItems.map((item) => (
             <FoundItemCard 
               key={item.id}

@@ -216,12 +216,12 @@ const Profile = () => {
                 <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
                   {/* Image Section - Only for Found Items */}
                   {!isLostItem && (
-                    <div className="h-36 sm:h-52 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center relative">
+                    <div className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center relative">
                       {hasValidImage ? (
                         <img 
                           src={item.image_url} 
                           alt={itemTitle}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain bg-white"
                           onError={() => handleImageError(item.id)}
                         />
                       ) : (
